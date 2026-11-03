@@ -8,16 +8,16 @@ import {
 import { CoupleSettings, Memory, Place, Plan, TimeCapsule } from '../types';
 
 const STORAGE_KEYS = {
-  SETTINGS: 'sempiterno_settings_v1',
-  MEMORIES: 'sempiterno_memories_v1',
-  PLANS: 'sempiterno_plans_v1',
-  PLACES: 'sempiterno_places_v1',
-  CAPSULES: 'sempiterno_capsules_v1',
+  SETTINGS: 'sempiterno_settings_v3',
+  MEMORIES: 'sempiterno_memories_v3',
+  PLANS: 'sempiterno_plans_v3',
+  PLACES: 'sempiterno_places_v3',
+  CAPSULES: 'sempiterno_capsules_v3',
 };
 
 export function loadSettings(): CoupleSettings {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+    const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS) || localStorage.getItem('sempiterno_settings_v1');
     if (!raw) return INITIAL_SETTINGS;
     const parsed = JSON.parse(raw);
     const settings: CoupleSettings = {
@@ -51,11 +51,11 @@ export function saveSettings(settings: CoupleSettings): void {
 export function loadMemories(): Memory[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.MEMORIES);
-    if (!raw) return INITIAL_MEMORIES;
+    if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_MEMORIES;
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
-    return INITIAL_MEMORIES;
+    return [];
   }
 }
 
@@ -70,11 +70,11 @@ export function saveMemories(memories: Memory[]): void {
 export function loadPlans(): Plan[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.PLANS);
-    if (!raw) return INITIAL_PLANS;
+    if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_PLANS;
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
-    return INITIAL_PLANS;
+    return [];
   }
 }
 
@@ -89,11 +89,11 @@ export function savePlans(plans: Plan[]): void {
 export function loadPlaces(): Place[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.PLACES);
-    if (!raw) return INITIAL_PLACES;
+    if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_PLACES;
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
-    return INITIAL_PLACES;
+    return [];
   }
 }
 
@@ -108,11 +108,11 @@ export function savePlaces(places: Place[]): void {
 export function loadTimeCapsules(): TimeCapsule[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.CAPSULES);
-    if (!raw) return INITIAL_TIME_CAPSULES;
+    if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_TIME_CAPSULES;
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
-    return INITIAL_TIME_CAPSULES;
+    return [];
   }
 }
 
@@ -169,4 +169,9 @@ export function resetAllDataToDefault(): void {
   localStorage.removeItem(STORAGE_KEYS.PLANS);
   localStorage.removeItem(STORAGE_KEYS.PLACES);
   localStorage.removeItem(STORAGE_KEYS.CAPSULES);
+  localStorage.removeItem('sempiterno_settings_v1');
+  localStorage.removeItem('sempiterno_memories_v1');
+  localStorage.removeItem('sempiterno_plans_v1');
+  localStorage.removeItem('sempiterno_places_v1');
+  localStorage.removeItem('sempiterno_capsules_v1');
 }

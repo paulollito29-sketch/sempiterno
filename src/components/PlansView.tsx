@@ -134,6 +134,27 @@ export const PlansView: React.FC<PlansViewProps> = ({
         </div>
       </div>
 
+      {/* Overall Empty Prompt if no plans yet */}
+      {plans.length === 0 && (
+        <div className="bg-cream dark:bg-nightSurface border-2 border-dashed border-carbon rounded-3xl p-6 text-center">
+          <span className="text-3xl block mb-2">🧭</span>
+          <h3 className="font-display font-bold text-base text-carbon dark:text-cream mb-1">
+            Su lista de deseos "Por Vivir" está esperando sus primeras aventuras
+          </h3>
+          <p className="text-xs text-carbon/70 dark:text-cream/70 max-w-md mx-auto mb-3 leading-relaxed">
+            ¿Una escapada de fin de semana, una cena especial o un plan en casa? Propongan sus ideas y antojos para verlos en el tablero.
+          </p>
+          <button
+            type="button"
+            onClick={onOpenNewPlan}
+            className="neo-btn-primary text-xs py-2 px-4 inline-flex items-center gap-1.5"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Proponer Primer Plan</span>
+          </button>
+        </div>
+      )}
+
       {/* Status Columns (Kanban Board) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {STATUSES.map((statusGroup) => {

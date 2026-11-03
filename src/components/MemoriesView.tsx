@@ -400,19 +400,24 @@ export const MemoriesView: React.FC<MemoriesViewProps> = ({
       {/* Empty State */}
       {filteredMemories.length === 0 && (
         <div className="text-center py-16 bg-white dark:bg-nightCard border-3 border-dashed border-carbon rounded-3xl p-8">
-          <span className="text-4xl block mb-2">🔍</span>
+          <span className="text-4xl block mb-2">{memories.length === 0 ? '📖' : '🔍'}</span>
           <h3 className="font-display text-lg font-bold text-carbon dark:text-cream">
-            No se encontraron recuerdos con estos filtros
+            {memories.length === 0
+              ? 'Su Bitácora está lista para llenarse de historias'
+              : 'No se encontraron recuerdos con estos filtros'}
           </h3>
-          <p className="text-xs text-carbon/60 dark:text-cream/60 mt-1 mb-4">
-            Prueba buscando con otra palabra o añade uno nuevo para este momento.
+          <p className="text-xs text-carbon/60 dark:text-cream/60 mt-1 mb-4 max-w-sm mx-auto">
+            {memories.length === 0
+              ? 'Aún no tienen recuerdos registrados. Hagan clic en el botón de abajo para guardar su primera cita, viaje o anécdota especial juntos.'
+              : 'Prueba buscando con otra palabra o añade uno nuevo para este momento.'}
           </p>
           <button
             type="button"
             onClick={onOpenNewMemory}
-            className="neo-btn-primary text-xs py-2 px-4"
+            className="neo-btn-primary text-xs py-2 px-4 inline-flex items-center gap-1.5"
           >
-            Añadir Recuerdo Nuevo
+            <Plus className="w-4 h-4" />
+            <span>Añadir Primer Recuerdo</span>
           </button>
         </div>
       )}

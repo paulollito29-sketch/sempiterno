@@ -20,54 +20,6 @@ interface RouletteViewProps {
   onAcceptPlanChallenge: (plan: Plan) => void;
 }
 
-const DEFAULT_SURPRISE_IDEAS: Plan[] = [
-  {
-    id: 's-1',
-    title: 'Maratón de Postres & Helado a Domicilio',
-    description: 'Pedir diferentes sabores de helado y probarlos a ciegas adivinando el sabor.',
-    category: 'Planes en Casa',
-    budget: '$',
-    status: 'Idea / Antojo',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 's-2',
-    title: 'Búsqueda del Mejor Croissant de la Ciudad',
-    description: 'Recorrer dos panaderías artesanales distintas y coronar al ganador absoluto.',
-    category: 'Comida & Cafés',
-    budget: '$$',
-    status: 'Idea / Antojo',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 's-3',
-    title: 'Cena a Ciegas preparada por Uno de los Dos',
-    description: 'Uno cocina un plato secreto con música de fondo mientras el otro descansa.',
-    category: 'Planes en Casa',
-    budget: '$',
-    status: 'Idea / Antojo',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 's-4',
-    title: 'Noche de Juegos de Mesa & Snacks Raros',
-    description: 'Comprar snacks que nunca hayamos probado antes y jugar juegos de cartas.',
-    category: 'Planes en Casa',
-    budget: '$',
-    status: 'Idea / Antojo',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 's-5',
-    title: 'Paseo Nocturno con Luces de la Ciudad',
-    description: 'Caminar de la mano hablando del futuro mientras el tráfico se calma.',
-    category: 'Aventura',
-    budget: '$',
-    status: 'Idea / Antojo',
-    createdAt: new Date().toISOString(),
-  },
-];
-
 export const RouletteView: React.FC<RouletteViewProps> = ({
   plans,
   onAcceptPlanChallenge,
@@ -76,13 +28,11 @@ export const RouletteView: React.FC<RouletteViewProps> = ({
   const [selectedVibe, setSelectedVibe] = useState<'Todos' | 'En casa' | 'Salir' | 'Aventura'>('Todos');
   const [isSpinning, setIsSpinning] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
-  const [spinCount, setSpinCount] = useState(0);
 
-  // Available candidate plans
+  // Available candidate plans from user's actual list
   const candidatePlans = plans.filter((p) => p.status !== '¡Vivido!');
-  const allPool = candidatePlans.length > 0 ? candidatePlans : DEFAULT_SURPRISE_IDEAS;
 
-  const filteredPool = allPool.filter((p) => {
+  const filteredPool = candidatePlans.filter((p) => {
     const matchesBudget = selectedBudget === 'Todos' || p.budget === selectedBudget;
     let matchesVibe = true;
     if (selectedVibe === 'En casa') matchesVibe = p.category === 'Planes en Casa';
@@ -91,10 +41,10 @@ export const RouletteView: React.FC<RouletteViewProps> = ({
     return matchesBudget && matchesVibe;
   });
 
-  const finalPool = filteredPool.length > 0 ? filteredPool : allPool;
+  const finalPool = filteredPool.length > 0 ? filteredPool : candidatePlans;
 
   const handleSpinRoulette = () => {
-    if (isSpinning) return;
+    if (isSpinning || finalPool.length === 0) return;
     setIsSpinning(true);
     setSelectedPlan(null);
 
@@ -109,7 +59,6 @@ export const RouletteView: React.FC<RouletteViewProps> = ({
       if (cycles >= maxCycles) {
         clearInterval(interval);
         setIsSpinning(false);
-        setSpinCount((prev) => prev + 1);
         fireSuperCelebration();
       }
     }, 120);
@@ -209,19 +158,32 @@ export const RouletteView: React.FC<RouletteViewProps> = ({
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-7 h-7 bg-coral border-2 border-carbon rotate-45 shadow-neo-sm z-10" />
           </div>
 
-          {/* Spin Button */}
-          <button
-            type="button"
-            disabled={isSpinning}
-            onClick={handleSpinRoulette}
-            className="mt-6 neo-btn-primary py-3 px-8 text-base sm:text-lg flex items-center gap-2 font-black shadow-neo-lg"
-          >
-            <RotateCw className={`w-5 h-5 ${isSpinning ? 'animate-spin' : ''}`} />
-            <span>{isSpinning ? 'Eligiendo...' : '¡Girar la Ruleta! 🎲'}</span>
-          </button>
-          <span className="text-[11px] font-semibold text-carbon/60 dark:text-cream/60 mt-2">
-            Opciones disponibles en la tómbola: {finalPool.length} planes
-          </span>
+          {/* Spin Button or Empty State */}
+          {finalPool.length === 0 ? (
+            <div className="mt-6 p-4 max-w-md bg-cream dark:bg-nightSurface border-2 border-dashed border-carbon rounded-2xl text-center">
+              <p className="text-xs font-bold text-carbon/75 dark:text-cream/75 mb-1">
+                Aún no tienen planes registrados en su lista 🧭
+              </p>
+              <p className="text-[11px] text-carbon/60 dark:text-cream/60">
+                Vayan a la pestaña <strong>"Por Vivir"</strong> y agreguen sus antojos o ideas para que la ruleta pueda elegir al azar entre sus planes reales.
+              </p>
+            </div>
+          ) : (
+            <>
+              <button
+                type="button"
+                disabled={isSpinning}
+                onClick={handleSpinRoulette}
+                className="mt-6 neo-btn-primary py-3 px-8 text-base sm:text-lg flex items-center gap-2 font-black shadow-neo-lg"
+              >
+                <RotateCw className={`w-5 h-5 ${isSpinning ? 'animate-spin' : ''}`} />
+                <span>{isSpinning ? 'Eligiendo...' : '¡Girar la Ruleta! 🎲'}</span>
+              </button>
+              <span className="text-[11px] font-semibold text-carbon/60 dark:text-cream/60 mt-2">
+                Opciones disponibles en la tómbola: {finalPool.length} planes
+              </span>
+            </>
+          )}
         </div>
 
         {/* Selected Plan Result Card */}

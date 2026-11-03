@@ -492,8 +492,22 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 </div>
               </motion.div>
             ) : (
-              <div className="text-center p-8 text-sm text-carbon/60 dark:text-cream/60">
-                Aún no tienes recuerdos guardados. ¡Crea el primero!
+              <div className="bg-cream dark:bg-nightSurface border-2 border-dashed border-carbon rounded-2xl p-8 text-center">
+                <span className="text-3xl block mb-2">📸</span>
+                <h4 className="font-display font-bold text-base text-carbon dark:text-cream mb-1">
+                  Su álbum de recuerdos está listo para comenzar
+                </h4>
+                <p className="text-xs text-carbon/70 dark:text-cream/70 mb-4 max-w-xs mx-auto">
+                  Registren su primera cita, foto o momento especial juntos para revivirlo aquí en forma de Polaroid.
+                </p>
+                <button
+                  type="button"
+                  onClick={onOpenNewMemory}
+                  className="neo-btn-primary text-xs py-2 px-4 inline-flex items-center gap-1.5"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  <span>Añadir Primer Recuerdo</span>
+                </button>
               </div>
             )}
           </div>

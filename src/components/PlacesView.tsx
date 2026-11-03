@@ -278,16 +278,25 @@ export const PlacesView: React.FC<PlacesViewProps> = ({
       </div>
 
       {filteredPlaces.length === 0 && (
-        <div className="text-center py-12 bg-white dark:bg-nightCard border-2 border-dashed border-carbon rounded-2xl p-6">
-          <p className="text-xs text-carbon/60 dark:text-cream/60 font-semibold mb-3">
-            No se encontraron rincones con los filtros seleccionados.
+        <div className="text-center py-16 bg-white dark:bg-nightCard border-3 border-dashed border-carbon rounded-3xl p-8">
+          <span className="text-4xl block mb-2">{places.length === 0 ? '🗺️' : '🔍'}</span>
+          <h3 className="font-display text-lg font-bold text-carbon dark:text-cream">
+            {places.length === 0
+              ? 'Su guía de rincones favoritos está vacía'
+              : 'No se encontraron rincones con los filtros seleccionados'}
+          </h3>
+          <p className="text-xs text-carbon/60 dark:text-cream/60 mt-1 mb-4 max-w-sm mx-auto">
+            {places.length === 0
+              ? 'Guarden los cafés, restaurantes, playas o miradores que han visitado o tienen pendientes por conocer.'
+              : 'Prueben buscando con otra palabra o seleccionen otra categoría.'}
           </p>
           <button
             type="button"
             onClick={onOpenNewPlace}
-            className="neo-btn-primary text-xs py-2 px-3"
+            className="neo-btn-primary text-xs py-2 px-4 inline-flex items-center gap-1.5"
           >
-            Añadir Nuestro Primer Rincón
+            <Plus className="w-4 h-4" />
+            <span>Añadir Primer Rincón</span>
           </button>
         </div>
       )}
