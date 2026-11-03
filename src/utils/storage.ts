@@ -19,7 +19,13 @@ export function loadSettings(): CoupleSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS);
     if (!raw) return INITIAL_SETTINGS;
-    return { ...INITIAL_SETTINGS, ...JSON.parse(raw) };
+    const parsed = JSON.parse(raw);
+    const settings: CoupleSettings = { ...INITIAL_SETTINGS, ...parsed };
+    if (!settings.partner2?.name || settings.partner2.name === 'Mi Amor') {
+      settings.partner2 = { ...settings.partner2, name: 'Alexandra' };
+      saveSettings(settings);
+    }
+    return settings;
   } catch {
     return INITIAL_SETTINGS;
   }

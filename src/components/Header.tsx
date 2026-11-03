@@ -116,7 +116,9 @@ export const Header: React.FC<HeaderProps> = ({
               size={18}
             />
             <span className="hidden sm:inline">
-              {settings.currentUser === 'Gigio' ? 'Gigio (Paulo)' : 'Rosita'}
+              {settings.currentUser === 'Gigio'
+                ? `${settings.partner1.nickname} (${settings.partner1.name})`
+                : `${settings.partner2.nickname} (${settings.partner2.name})`}
             </span>
             <span className="text-[10px] bg-white/70 px-1 py-0.2 rounded border border-carbon">
               ⇄

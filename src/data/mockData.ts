@@ -9,7 +9,7 @@ export const INITIAL_SETTINGS: CoupleSettings = {
     role: "Gigio",
   },
   partner2: {
-    name: "Mi Amor",
+    name: "Alexandra",
     nickname: "Rosita",
     avatarUrl: "/assets/gigio-rosita.jpg",
     role: "Rosita",

@@ -471,7 +471,7 @@ export function App() {
           <div className="flex items-center gap-1.5 text-xs">
             <span>Hecho con</span>
             <Heart className="w-3.5 h-3.5 text-coral fill-coral inline" />
-            <span>para Gigio & Rosita</span>
+            <span>para {settings.partner1.name} & {settings.partner2.name} 🐭❤️</span>
           </div>
 
           <button
@@ -531,8 +531,8 @@ export function App() {
       <BedtimeModal
         isOpen={isBedtimeModalOpen}
         onClose={() => setIsBedtimeModalOpen(false)}
-        partner1Name={settings.partner1.nickname}
-        partner2Name={settings.partner2.nickname}
+        partner1Name={settings.partner1.name}
+        partner2Name={settings.partner2.name}
       />
 
       <SettingsModal
