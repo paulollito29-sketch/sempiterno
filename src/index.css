@@ -13,6 +13,12 @@
     --text-main: #FFFDF7;
   }
 
+  html, body {
+    overscroll-behavior-y: none;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
   body {
     background-color: var(--bg-main);
     color: var(--text-main);

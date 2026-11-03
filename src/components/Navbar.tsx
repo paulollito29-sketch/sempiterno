@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { 
   Heart, 
   Clock, 
@@ -16,6 +17,7 @@ interface NavbarProps {
   onSelectTab: (tab: NavTab) => void;
   unlockedCapsulesCount?: number;
   upcomingPlansCount?: number;
+  onOpenSettings?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -28,33 +30,33 @@ export const Navbar: React.FC<NavbarProps> = ({
     {
       id: 'presente',
       label: 'Presente',
-      icon: <Heart className="w-5 h-5" />,
+      icon: <Heart className="w-4 h-4 sm:w-5 sm:h-5" />,
     },
     {
       id: 'archivo',
       label: 'Bitácora',
-      icon: <CalendarDays className="w-5 h-5" />,
+      icon: <CalendarDays className="w-4 h-4 sm:w-5 sm:h-5" />,
     },
     {
       id: 'planes',
       label: 'Por Vivir',
-      icon: <Compass className="w-5 h-5" />,
+      icon: <Compass className="w-4 h-4 sm:w-5 sm:h-5" />,
       badge: upcomingPlansCount,
     },
     {
       id: 'rincones',
       label: 'Rincones',
-      icon: <MapPin className="w-5 h-5" />,
+      icon: <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />,
     },
     {
       id: 'ruleta',
       label: 'Ruleta',
-      icon: <Sparkles className="w-5 h-5" />,
+      icon: <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />,
     },
     {
       id: 'capsulas',
       label: 'Cápsulas',
-      icon: <Mail className="w-5 h-5" />,
+      icon: <Mail className="w-4 h-4 sm:w-5 sm:h-5" />,
       badge: unlockedCapsulesCount,
     },
   ];
@@ -67,59 +69,70 @@ export const Navbar: React.FC<NavbarProps> = ({
           {tabs.map((tab) => {
             const isActive = currentTab === tab.id;
             return (
-              <button
+              <motion.button
                 key={tab.id}
                 type="button"
                 onClick={() => onSelectTab(tab.id)}
-                className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all ${
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.94 }}
+                className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border-2 transition-colors ${
                   isActive
-                    ? 'bg-coral text-white border-carbon shadow-neo -translate-y-0.5'
+                    ? 'bg-coral text-white border-carbon shadow-neo'
                     : 'bg-transparent text-carbon dark:text-cream border-transparent hover:border-carbon/30 hover:bg-cream dark:hover:bg-nightSurface'
                 }`}
               >
                 <span>{tab.icon}</span>
                 <span>{tab.label}</span>
                 {tab.badge && tab.badge > 0 ? (
-                  <span
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
                     className={`ml-1 text-[10px] font-black px-1.5 py-0.5 rounded-full border border-carbon ${
                       isActive ? 'bg-butter text-carbon' : 'bg-coral text-white'
                     }`}
                   >
                     {tab.badge}
-                  </span>
+                  </motion.span>
                 ) : null}
-              </button>
+              </motion.button>
             );
           })}
         </div>
       </nav>
 
       {/* Mobile Floating Bottom Bar */}
-      <div className="fixed bottom-3 left-0 right-0 z-40 px-3 md:hidden pointer-events-none">
-        <nav className="max-w-md mx-auto pointer-events-auto bg-white/95 dark:bg-nightCard/95 backdrop-blur-md border-3 border-carbon rounded-2xl p-1.5 shadow-neo-lg flex items-center justify-around">
+      <div className="fixed bottom-3 left-0 right-0 z-40 px-2 sm:px-3 md:hidden pointer-events-none">
+        <nav className="max-w-md mx-auto pointer-events-auto bg-white/95 dark:bg-nightCard/95 backdrop-blur-md border-3 border-carbon rounded-2xl p-1 shadow-neo-lg flex items-center justify-around">
           {tabs.map((tab) => {
             const isActive = currentTab === tab.id;
             return (
-              <button
+              <motion.button
                 key={tab.id}
                 type="button"
                 onClick={() => onSelectTab(tab.id)}
-                className={`relative flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all duration-150 ${
+                whileTap={{ scale: 0.88 }}
+                className={`relative flex-1 flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-colors ${
                   isActive
-                    ? 'bg-coral text-white border-2 border-carbon shadow-neo-sm font-bold scale-105'
+                    ? 'bg-coral text-white border-2 border-carbon shadow-neo-sm font-bold'
                     : 'text-carbon/80 dark:text-cream/80 hover:bg-cream dark:hover:bg-nightSurface border-2 border-transparent font-medium'
                 }`}
               >
                 <div className="relative">
                   {tab.icon}
                   {tab.badge && tab.badge > 0 ? (
-                    <span className="absolute -top-1.5 -right-2 bg-butter text-carbon font-black text-[9px] w-4 h-4 rounded-full border border-carbon flex items-center justify-center shadow-xs">
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-1.5 -right-2 bg-butter text-carbon font-black text-[9px] w-4 h-4 rounded-full border border-carbon flex items-center justify-center shadow-xs"
+                    >
                       {tab.badge}
-                    </span>
+                    </motion.span>
                   ) : null}
                 </div>
-                <span className="text-[10px] mt-0.5 tracking-tight">{tab.label}</span>
-              </button>
+                <span className="text-[9px] sm:text-[10px] mt-0.5 tracking-tight truncate max-w-full">
+                  {tab.label}
+                </span>
+              </motion.button>
             );
           })}
         </nav>

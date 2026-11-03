@@ -420,104 +420,114 @@ export function App() {
         upcomingPlansCount={upcomingPlansCount}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-6 pb-24">
-        {currentTab === 'presente' && (
-          <Dashboard
-            settings={settings}
-            memories={memories}
-            plans={plans}
-            onNavigateToMemories={(memId) => {
-              if (memId) setSelectedMemoryId(memId);
-              setCurrentTab('archivo');
-            }}
-            onNavigateToPlans={() => setCurrentTab('planes')}
-            onNavigateToRoulette={() => setCurrentTab('ruleta')}
-            onOpenNewMemory={() => {
-              setMemoryToEdit(null);
-              setPrefillPlanForMemory(null);
-              setIsMemoryModalOpen(true);
-            }}
-            onOpenNewPlan={() => {
-              setPlanToEdit(null);
-              setIsPlanModalOpen(true);
-            }}
-            onUpdateStartDate={(newDate) => {
-              handleUpdateSettings({ ...settings, startDate: newDate });
-            }}
-            onCompletePlan={handleConvertPlanToMemory}
-          />
-        )}
+      {/* Main Content Area with Page Transition Animation */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 pt-4 sm:pt-6 pb-12 sm:pb-16">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentTab}
+            initial={{ opacity: 0, y: 15, scale: 0.99 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -15, scale: 0.99 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+          >
+            {currentTab === 'presente' && (
+              <Dashboard
+                settings={settings}
+                memories={memories}
+                plans={plans}
+                onNavigateToMemories={(memId) => {
+                  if (memId) setSelectedMemoryId(memId);
+                  setCurrentTab('archivo');
+                }}
+                onNavigateToPlans={() => setCurrentTab('planes')}
+                onNavigateToRoulette={() => setCurrentTab('ruleta')}
+                onOpenNewMemory={() => {
+                  setMemoryToEdit(null);
+                  setPrefillPlanForMemory(null);
+                  setIsMemoryModalOpen(true);
+                }}
+                onOpenNewPlan={() => {
+                  setPlanToEdit(null);
+                  setIsPlanModalOpen(true);
+                }}
+                onUpdateStartDate={(newDate) => {
+                  handleUpdateSettings({ ...settings, startDate: newDate });
+                }}
+                onCompletePlan={handleConvertPlanToMemory}
+              />
+            )}
 
-        {currentTab === 'archivo' && (
-          <MemoriesView
-            memories={memories}
-            settings={settings}
-            onOpenNewMemory={() => {
-              setMemoryToEdit(null);
-              setPrefillPlanForMemory(null);
-              setIsMemoryModalOpen(true);
-            }}
-            onEditMemory={(mem) => {
-              setMemoryToEdit(mem);
-              setPrefillPlanForMemory(null);
-              setIsMemoryModalOpen(true);
-            }}
-            onDeleteMemory={handleDeleteMemory}
-            selectedMemoryId={selectedMemoryId}
-          />
-        )}
+            {currentTab === 'archivo' && (
+              <MemoriesView
+                memories={memories}
+                settings={settings}
+                onOpenNewMemory={() => {
+                  setMemoryToEdit(null);
+                  setPrefillPlanForMemory(null);
+                  setIsMemoryModalOpen(true);
+                }}
+                onEditMemory={(mem) => {
+                  setMemoryToEdit(mem);
+                  setPrefillPlanForMemory(null);
+                  setIsMemoryModalOpen(true);
+                }}
+                onDeleteMemory={handleDeleteMemory}
+                selectedMemoryId={selectedMemoryId}
+              />
+            )}
 
-        {currentTab === 'planes' && (
-          <PlansView
-            plans={plans}
-            onOpenNewPlan={() => {
-              setPlanToEdit(null);
-              setIsPlanModalOpen(true);
-            }}
-            onEditPlan={(plan) => {
-              setPlanToEdit(plan);
-              setIsPlanModalOpen(true);
-            }}
-            onDeletePlan={handleDeletePlan}
-            onUpdatePlanStatus={handleUpdatePlanStatus}
-            onConvertToMemory={handleConvertPlanToMemory}
-          />
-        )}
+            {currentTab === 'planes' && (
+              <PlansView
+                plans={plans}
+                onOpenNewPlan={() => {
+                  setPlanToEdit(null);
+                  setIsPlanModalOpen(true);
+                }}
+                onEditPlan={(plan) => {
+                  setPlanToEdit(plan);
+                  setIsPlanModalOpen(true);
+                }}
+                onDeletePlan={handleDeletePlan}
+                onUpdatePlanStatus={handleUpdatePlanStatus}
+                onConvertToMemory={handleConvertPlanToMemory}
+              />
+            )}
 
-        {currentTab === 'rincones' && (
-          <PlacesView
-            places={places}
-            settings={settings}
-            onOpenNewPlace={() => {
-              setPlaceToEdit(null);
-              setIsPlaceModalOpen(true);
-            }}
-            onEditPlace={(place) => {
-              setPlaceToEdit(place);
-              setIsPlaceModalOpen(true);
-            }}
-            onDeletePlace={handleDeletePlace}
-            onToggleStatus={handleTogglePlaceStatus}
-          />
-        )}
+            {currentTab === 'rincones' && (
+              <PlacesView
+                places={places}
+                settings={settings}
+                onOpenNewPlace={() => {
+                  setPlaceToEdit(null);
+                  setIsPlaceModalOpen(true);
+                }}
+                onEditPlace={(place) => {
+                  setPlaceToEdit(place);
+                  setIsPlaceModalOpen(true);
+                }}
+                onDeletePlace={handleDeletePlace}
+                onToggleStatus={handleTogglePlaceStatus}
+              />
+            )}
 
-        {currentTab === 'ruleta' && (
-          <RouletteView
-            plans={plans}
-            onAcceptPlanChallenge={handleAcceptPlanChallenge}
-          />
-        )}
+            {currentTab === 'ruleta' && (
+              <RouletteView
+                plans={plans}
+                onAcceptPlanChallenge={handleAcceptPlanChallenge}
+              />
+            )}
 
-        {currentTab === 'capsulas' && (
-          <TimeCapsulesView
-            capsules={capsules}
-            settings={settings}
-            onOpenNewCapsule={() => setIsCapsuleModalOpen(true)}
-            onDeleteCapsule={handleDeleteCapsule}
-            onOpenCapsuleContent={handleOpenCapsuleContent}
-          />
-        )}
+            {currentTab === 'capsulas' && (
+              <TimeCapsulesView
+                capsules={capsules}
+                settings={settings}
+                onOpenNewCapsule={() => setIsCapsuleModalOpen(true)}
+                onDeleteCapsule={handleDeleteCapsule}
+                onOpenCapsuleContent={handleOpenCapsuleContent}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* Realtime Incoming Kiss Alert */}
@@ -563,9 +573,9 @@ export function App() {
         )}
       </AnimatePresence>
 
-      {/* Footer */}
-      <footer className="border-t-2 border-carbon bg-white dark:bg-nightCard py-6 px-4 text-center text-xs font-semibold text-carbon/70 dark:text-cream/70">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      {/* Footer - With ample pb-28 for mobile floating navbar */}
+      <footer className="border-t-2 border-carbon bg-white dark:bg-nightCard pt-6 pb-28 sm:pb-8 px-4 text-center text-xs font-semibold text-carbon/70 dark:text-cream/70">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3.5">
           <div className="flex items-center gap-2">
             <span className="font-display font-black text-carbon dark:text-cream text-sm">
               Sempiterno
@@ -574,19 +584,38 @@ export function App() {
             <span>Para toda la vida</span>
           </div>
 
-          <div className="flex items-center gap-1.5 text-xs">
-            <span>Hecho con</span>
-            <Heart className="w-3.5 h-3.5 text-coral fill-coral inline" />
-            <span>solo para {settings.partner2?.name || 'Alexandra'} 🎀❤️</span>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setIsBedtimeModalOpen(true)}
-            className="text-[11px] font-bold text-coral hover:underline"
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="inline-flex items-center gap-1.5 text-xs bg-rosePastel-light/70 dark:bg-nightSurface border-2 border-carbon px-3 py-1.5 rounded-2xl shadow-neo-sm"
           >
-            "¡A la camita... a la camita!" 🐭💤
-          </button>
+            <span>Hecho con</span>
+            <Heart className="w-3.5 h-3.5 text-coral fill-coral inline animate-pulse" />
+            <span className="font-bold text-coral">solo para {settings.partner2?.name || 'Alexandra'} 🎀❤️</span>
+          </motion.div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setIsBedtimeModalOpen(true)}
+              className="text-[11px] font-bold text-coral hover:underline"
+            >
+              "¡A la camita... a la camita!" 🐭💤
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsSettingsModalOpen(true)}
+              className="text-[11px] font-bold text-carbon/70 dark:text-cream/70 hover:underline flex items-center gap-1"
+            >
+              ⚙️ Ajustes
+            </button>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="text-[11px] font-bold text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-1"
+            >
+              🔄 Recargar
+            </button>
+          </div>
         </div>
       </footer>
 

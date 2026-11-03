@@ -120,16 +120,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
       <section className="bg-gradient-to-r from-rosePastel-light via-cream to-butter-light dark:from-nightSurface dark:via-night dark:to-nightCard border-3 border-carbon rounded-3xl p-5 sm:p-7 shadow-neo relative overflow-hidden">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
           <div className="flex items-center gap-4 text-center sm:text-left">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-2 border-carbon overflow-hidden shadow-neo-sm shrink-0 bg-white">
+            <motion.div
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-2 border-carbon overflow-hidden shadow-neo-sm shrink-0 bg-white"
+              animate={{ y: [0, -4, 0] }}
+              transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}
+            >
               <img
                 src="/assets/gigio-rosita.jpg"
                 alt="Gigio & Rosita"
                 className="w-full h-full object-cover"
               />
-            </div>
+            </motion.div>
             <div>
               <div className="inline-flex items-center gap-1.5 bg-white dark:bg-nightCard border border-carbon px-2.5 py-0.5 rounded-full text-xs font-bold text-coral mb-1.5 shadow-xs">
-                <Sparkles className="w-3.5 h-3.5" />
+                <Sparkles className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: '6s' }} />
                 <span>Nuestra historia de amor</span>
               </div>
               <h2 className="font-display text-2xl sm:text-3xl font-black text-carbon dark:text-cream leading-tight">
@@ -143,22 +147,26 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
           {/* Quick Action Badges */}
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
-            <button
+            <motion.button
               type="button"
               onClick={onOpenNewMemory}
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.94 }}
               className="neo-btn-primary py-2 px-3 sm:px-4 text-xs sm:text-sm flex items-center gap-1.5"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Nuevo Recuerdo</span>
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="button"
               onClick={onNavigateToRoulette}
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.94 }}
               className="neo-btn-secondary py-2 px-3 sm:px-4 text-xs sm:text-sm flex items-center gap-1.5"
             >
               <Sparkles className="w-4 h-4" />
               <span>¿Qué hacemos hoy?</span>
-            </button>
+            </motion.button>
           </div>
         </div>
       </section>
@@ -235,21 +243,24 @@ export const Dashboard: React.FC<DashboardProps> = ({
             { label: 'Minutos', value: elapsed.minutes, color: 'bg-sage/70' },
             { label: 'Segundos', value: elapsed.seconds, color: 'bg-rosePastel/40', animate: true },
           ].map((item, idx) => (
-            <div
+            <motion.div
               key={idx}
-              className={`${item.color} dark:bg-nightSurface border-2 border-carbon rounded-2xl p-3 sm:p-4 text-center shadow-neo-sm relative`}
+              whileHover={{ scale: 1.07, y: -4, rotate: (idx % 2 === 0 ? 1.5 : -1.5) }}
+              whileTap={{ scale: 0.94 }}
+              transition={{ type: "spring", stiffness: 400, damping: 15 }}
+              className={`${item.color} dark:bg-nightSurface border-2 border-carbon rounded-2xl p-2.5 sm:p-4 text-center shadow-neo-sm relative cursor-default`}
             >
               <div
-                className={`font-display text-2xl sm:text-4xl font-black text-carbon dark:text-cream ${
+                className={`font-display text-xl sm:text-4xl font-black text-carbon dark:text-cream ${
                   item.animate ? 'tabular-nums' : ''
                 }`}
               >
                 {item.value < 10 ? `0${item.value}` : item.value}
               </div>
-              <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-carbon/70 dark:text-cream/70 mt-1">
+              <div className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-carbon/70 dark:text-cream/70 mt-0.5 sm:mt-1">
                 {item.label}
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
