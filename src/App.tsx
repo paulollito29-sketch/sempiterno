@@ -1,0 +1,551 @@
+import React, { useState, useEffect } from 'react';
+import { Header } from './components/Header';
+import { Navbar, NavTab } from './components/Navbar';
+import { Dashboard } from './components/Dashboard';
+import { MemoriesView } from './components/MemoriesView';
+import { PlansView } from './components/PlansView';
+import { PlacesView } from './components/PlacesView';
+import { RouletteView } from './components/RouletteView';
+import { TimeCapsulesView } from './components/TimeCapsulesView';
+import { MemoryModal } from './components/MemoryModal';
+import { PlanModal } from './components/PlanModal';
+import { PlaceModal } from './components/PlaceModal';
+import { TimeCapsuleModal } from './components/TimeCapsuleModal';
+import { BedtimeModal } from './components/BedtimeModal';
+import { SettingsModal } from './components/SettingsModal';
+import { 
+  CoupleSettings, 
+  Memory, 
+  Plan, 
+  Place, 
+  TimeCapsule, 
+  PlanStatus,
+  MemoryCategory,
+  ReturnVerdict
+} from './types';
+import {
+  loadSettings,
+  saveSettings,
+  loadMemories,
+  saveMemories,
+  loadPlans,
+  savePlans,
+  loadPlaces,
+  savePlaces,
+  loadTimeCapsules,
+  saveTimeCapsules,
+  resetAllDataToDefault,
+} from './utils/storage';
+import { isBedtime, calculateCountdown } from './utils/date';
+import { fireHeartConfetti, fireSuperCelebration } from './utils/confetti';
+import { fetchFromGoogleSheets, syncToGoogleSheets } from './utils/googleSheets';
+import { Heart, CloudCheck } from 'lucide-react';
+
+export function App() {
+  // Settings & Theme
+  const [settings, setSettings] = useState<CoupleSettings>(() => loadSettings());
+  
+  // Data State
+  const [memories, setMemories] = useState<Memory[]>(() => loadMemories());
+  const [plans, setPlans] = useState<Plan[]>(() => loadPlans());
+  const [places, setPlaces] = useState<Place[]>(() => loadPlaces());
+  const [capsules, setCapsules] = useState<TimeCapsule[]>(() => loadTimeCapsules());
+
+  // Navigation
+  const [currentTab, setCurrentTab] = useState<NavTab>('presente');
+  const [selectedMemoryId, setSelectedMemoryId] = useState<string | null>(null);
+
+  // Modals
+  const [isMemoryModalOpen, setIsMemoryModalOpen] = useState(false);
+  const [memoryToEdit, setMemoryToEdit] = useState<Memory | null>(null);
+  const [prefillPlanForMemory, setPrefillPlanForMemory] = useState<{
+    title: string;
+    category: MemoryCategory;
+    location?: string;
+  } | null>(null);
+
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [planToEdit, setPlanToEdit] = useState<Plan | null>(null);
+
+  const [isPlaceModalOpen, setIsPlaceModalOpen] = useState(false);
+  const [placeToEdit, setPlaceToEdit] = useState<Place | null>(null);
+
+  const [isCapsuleModalOpen, setIsCapsuleModalOpen] = useState(false);
+  const [isBedtimeModalOpen, setIsBedtimeModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
+  // Sync dark mode class
+  useEffect(() => {
+    if (settings.darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [settings.darkMode]);
+
+  // Live fetch from Google Sheets on mount with fallback
+  useEffect(() => {
+    async function loadCloudData() {
+      if (settings.googleSheetsUrl && settings.googleSheetsUrl.startsWith('http')) {
+        try {
+          const cloudData = await fetchFromGoogleSheets(settings.googleSheetsUrl);
+          if (cloudData) {
+            if (cloudData.settings) {
+              setSettings((prev) => {
+                const merged = { ...prev, ...cloudData.settings };
+                saveSettings(merged);
+                return merged;
+              });
+            }
+            if (cloudData.memories && cloudData.memories.length > 0) {
+              setMemories(cloudData.memories);
+              saveMemories(cloudData.memories);
+            }
+            if (cloudData.plans && cloudData.plans.length > 0) {
+              setPlans(cloudData.plans);
+              savePlans(cloudData.plans);
+            }
+            if (cloudData.places && cloudData.places.length > 0) {
+              setPlaces(cloudData.places);
+              savePlaces(cloudData.places);
+            }
+            if (cloudData.capsules && cloudData.capsules.length > 0) {
+              setCapsules(cloudData.capsules);
+              saveTimeCapsules(cloudData.capsules);
+            }
+          }
+        } catch (err) {
+          console.warn('Fallback a almacenamiento local tras error en Google Sheets:', err);
+        }
+      }
+    }
+    loadCloudData();
+  }, [settings.googleSheetsUrl]);
+
+  // Background sync helper
+  const triggerBackgroundSync = async (
+    customSettings = settings,
+    customMemories = memories,
+    customPlans = plans,
+    customPlaces = places,
+    customCapsules = capsules
+  ) => {
+    if (customSettings.googleSheetsUrl && customSettings.googleSheetsUrl.startsWith('http')) {
+      try {
+        await syncToGoogleSheets(customSettings.googleSheetsUrl, {
+          settings: customSettings,
+          memories: customMemories,
+          plans: customPlans,
+          places: customPlaces,
+          capsules: customCapsules,
+        });
+      } catch (e) {
+        console.warn('Error en sincronización en segundo plano:', e);
+      }
+    }
+  };
+
+  // Save changes to storage
+  const handleUpdateSettings = (newSettings: CoupleSettings) => {
+    setSettings(newSettings);
+    saveSettings(newSettings);
+    triggerBackgroundSync(newSettings);
+  };
+
+  const handleReloadAll = () => {
+    setSettings(loadSettings());
+    setMemories(loadMemories());
+    setPlans(loadPlans());
+    setPlaces(loadPlaces());
+    setCapsules(loadTimeCapsules());
+  };
+
+  const handleResetData = () => {
+    resetAllDataToDefault();
+    handleReloadAll();
+    fireSuperCelebration();
+  };
+
+  // --- MEMORY HANDLERS ---
+  const handleSaveMemory = (newMemory: Memory) => {
+    const exists = memories.some((m) => m.id === newMemory.id);
+    let updated: Memory[];
+    if (exists) {
+      updated = memories.map((m) => (m.id === newMemory.id ? newMemory : m));
+    } else {
+      updated = [newMemory, ...memories];
+    }
+    setMemories(updated);
+    saveMemories(updated);
+    triggerBackgroundSync(settings, updated);
+  };
+
+  const handleDeleteMemory = (memoryId: string) => {
+    const updated = memories.filter((m) => m.id !== memoryId);
+    setMemories(updated);
+    saveMemories(updated);
+    triggerBackgroundSync(settings, updated);
+  };
+
+  // --- PLAN HANDLERS ---
+  const handleSavePlan = (newPlan: Plan) => {
+    const exists = plans.some((p) => p.id === newPlan.id);
+    let updated: Plan[];
+    if (exists) {
+      updated = plans.map((p) => (p.id === newPlan.id ? newPlan : p));
+    } else {
+      updated = [newPlan, ...plans];
+    }
+    setPlans(updated);
+    savePlans(updated);
+    triggerBackgroundSync(settings, memories, updated);
+  };
+
+  const handleDeletePlan = (planId: string) => {
+    const updated = plans.filter((p) => p.id !== planId);
+    setPlans(updated);
+    savePlans(updated);
+    triggerBackgroundSync(settings, memories, updated);
+  };
+
+  const handleUpdatePlanStatus = (planId: string, newStatus: PlanStatus) => {
+    const updated = plans.map((p) => {
+      if (p.id === planId) {
+        return { ...p, status: newStatus };
+      }
+      return p;
+    });
+    setPlans(updated);
+    savePlans(updated);
+    triggerBackgroundSync(settings, memories, updated);
+  };
+
+  // Convert Plan to Memory
+  const handleConvertPlanToMemory = (plan: Plan) => {
+    // Map plan category to memory category
+    let memCat: MemoryCategory = 'Cena';
+    if (plan.category === 'Comida & Cafés') memCat = 'Cena';
+    if (plan.category === 'Viajes') memCat = 'Viaje';
+    if (plan.category === 'Planes en Casa') memCat = 'Plan Casero';
+    if (plan.category === 'Aventura') memCat = 'Concierto/Salida';
+
+    setPrefillPlanForMemory({
+      title: plan.title,
+      category: memCat,
+      location: plan.location,
+    });
+    setMemoryToEdit(null);
+    setIsMemoryModalOpen(true);
+
+    // Mark plan as lived
+    handleUpdatePlanStatus(plan.id, '¡Vivido!');
+  };
+
+  // --- PLACE HANDLERS ---
+  const handleSavePlace = (newPlace: Place) => {
+    const exists = places.some((p) => p.id === newPlace.id);
+    let updated: Place[];
+    if (exists) {
+      updated = places.map((p) => (p.id === newPlace.id ? newPlace : p));
+    } else {
+      updated = [newPlace, ...places];
+    }
+    setPlaces(updated);
+    savePlaces(updated);
+    triggerBackgroundSync(settings, memories, plans, updated);
+  };
+
+  const handleDeletePlace = (placeId: string) => {
+    const updated = places.filter((p) => p.id !== placeId);
+    setPlaces(updated);
+    savePlaces(updated);
+    triggerBackgroundSync(settings, memories, plans, updated);
+  };
+
+  const handleTogglePlaceStatus = (place: Place) => {
+    const newStatus: 'Visitado' | 'Por conocer' = place.status === 'Visitado' ? 'Por conocer' : 'Visitado';
+    const newVerdict: ReturnVerdict = newStatus === 'Visitado' ? '¡Sí o sí!' : 'Pendiente de probar';
+    const updated: Place[] = places.map((p) => {
+      if (p.id === place.id) {
+        return {
+          ...p,
+          status: newStatus,
+          wouldReturn: newVerdict,
+        };
+      }
+      return p;
+    });
+    setPlaces(updated);
+    savePlaces(updated);
+    triggerBackgroundSync(settings, memories, plans, updated);
+    fireHeartConfetti();
+  };
+
+  // --- CAPSULE HANDLERS ---
+  const handleSaveCapsule = (newCapsule: TimeCapsule) => {
+    const updated = [newCapsule, ...capsules];
+    setCapsules(updated);
+    saveTimeCapsules(updated);
+    triggerBackgroundSync(settings, memories, plans, places, updated);
+    fireHeartConfetti();
+  };
+
+  const handleDeleteCapsule = (capsuleId: string) => {
+    const updated = capsules.filter((c) => c.id !== capsuleId);
+    setCapsules(updated);
+    saveTimeCapsules(updated);
+    triggerBackgroundSync(settings, memories, plans, places, updated);
+  };
+
+  const handleOpenCapsuleContent = (capsuleId: string) => {
+    const updated = capsules.map((c) => {
+      if (c.id === capsuleId) {
+        return { ...c, isCustomOpened: true };
+      }
+      return c;
+    });
+    setCapsules(updated);
+    saveTimeCapsules(updated);
+    triggerBackgroundSync(settings, memories, plans, places, updated);
+  };
+
+  // --- ROULETTE CHALLENGE ACCEPT ---
+  const handleAcceptPlanChallenge = (plan: Plan) => {
+    // Schedule for this weekend / upcoming date
+    const today = new Date();
+    today.setDate(today.getDate() + 3);
+    const dateStr = today.toISOString().split('T')[0];
+
+    const scheduledPlan: Plan = {
+      ...plan,
+      status: 'Agendado',
+      scheduledDate: dateStr,
+      scheduledTime: '20:00',
+    };
+
+    handleSavePlan(scheduledPlan);
+    fireSuperCelebration();
+    setCurrentTab('presente'); // Take them back to dashboard to see their countdown!
+  };
+
+  // Calculate badges
+  const unlockedCapsulesCount = capsules.filter((c) => {
+    const cd = calculateCountdown(c.unlockDate);
+    return cd.isPast || c.isCustomOpened;
+  }).length;
+
+  const upcomingPlansCount = plans.filter((p) => p.status === 'Agendado').length;
+
+  return (
+    <div className="min-h-screen bg-cream dark:bg-night flex flex-col selection:bg-coral selection:text-white">
+      {/* Header */}
+      <Header
+        settings={settings}
+        onUpdateSettings={handleUpdateSettings}
+        onOpenSettings={() => setIsSettingsModalOpen(true)}
+        onOpenBedtime={() => setIsBedtimeModalOpen(true)}
+      />
+
+      {/* Navigation */}
+      <Navbar
+        currentTab={currentTab}
+        onSelectTab={(tab) => {
+          setCurrentTab(tab);
+          setSelectedMemoryId(null);
+        }}
+        unlockedCapsulesCount={unlockedCapsulesCount}
+        upcomingPlansCount={upcomingPlansCount}
+      />
+
+      {/* Main Content Area */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-6 pb-24">
+        {currentTab === 'presente' && (
+          <Dashboard
+            settings={settings}
+            memories={memories}
+            plans={plans}
+            onNavigateToMemories={(memId) => {
+              if (memId) setSelectedMemoryId(memId);
+              setCurrentTab('archivo');
+            }}
+            onNavigateToPlans={() => setCurrentTab('planes')}
+            onNavigateToRoulette={() => setCurrentTab('ruleta')}
+            onOpenNewMemory={() => {
+              setMemoryToEdit(null);
+              setPrefillPlanForMemory(null);
+              setIsMemoryModalOpen(true);
+            }}
+            onOpenNewPlan={() => {
+              setPlanToEdit(null);
+              setIsPlanModalOpen(true);
+            }}
+            onUpdateStartDate={(newDate) => {
+              handleUpdateSettings({ ...settings, startDate: newDate });
+            }}
+            onCompletePlan={handleConvertPlanToMemory}
+          />
+        )}
+
+        {currentTab === 'archivo' && (
+          <MemoriesView
+            memories={memories}
+            settings={settings}
+            onOpenNewMemory={() => {
+              setMemoryToEdit(null);
+              setPrefillPlanForMemory(null);
+              setIsMemoryModalOpen(true);
+            }}
+            onEditMemory={(mem) => {
+              setMemoryToEdit(mem);
+              setPrefillPlanForMemory(null);
+              setIsMemoryModalOpen(true);
+            }}
+            onDeleteMemory={handleDeleteMemory}
+            selectedMemoryId={selectedMemoryId}
+          />
+        )}
+
+        {currentTab === 'planes' && (
+          <PlansView
+            plans={plans}
+            onOpenNewPlan={() => {
+              setPlanToEdit(null);
+              setIsPlanModalOpen(true);
+            }}
+            onEditPlan={(plan) => {
+              setPlanToEdit(plan);
+              setIsPlanModalOpen(true);
+            }}
+            onDeletePlan={handleDeletePlan}
+            onUpdatePlanStatus={handleUpdatePlanStatus}
+            onConvertToMemory={handleConvertPlanToMemory}
+          />
+        )}
+
+        {currentTab === 'rincones' && (
+          <PlacesView
+            places={places}
+            settings={settings}
+            onOpenNewPlace={() => {
+              setPlaceToEdit(null);
+              setIsPlaceModalOpen(true);
+            }}
+            onEditPlace={(place) => {
+              setPlaceToEdit(place);
+              setIsPlaceModalOpen(true);
+            }}
+            onDeletePlace={handleDeletePlace}
+            onToggleStatus={handleTogglePlaceStatus}
+          />
+        )}
+
+        {currentTab === 'ruleta' && (
+          <RouletteView
+            plans={plans}
+            onAcceptPlanChallenge={handleAcceptPlanChallenge}
+          />
+        )}
+
+        {currentTab === 'capsulas' && (
+          <TimeCapsulesView
+            capsules={capsules}
+            settings={settings}
+            onOpenNewCapsule={() => setIsCapsuleModalOpen(true)}
+            onDeleteCapsule={handleDeleteCapsule}
+            onOpenCapsuleContent={handleOpenCapsuleContent}
+          />
+        )}
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t-2 border-carbon bg-white dark:bg-nightCard py-6 px-4 text-center text-xs font-semibold text-carbon/70 dark:text-cream/70">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="font-display font-black text-carbon dark:text-cream text-sm">
+              Sempiterno
+            </span>
+            <span>•</span>
+            <span>Para toda la vida</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 text-xs">
+            <span>Hecho con</span>
+            <Heart className="w-3.5 h-3.5 text-coral fill-coral inline" />
+            <span>para Gigio & Rosita</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsBedtimeModalOpen(true)}
+            className="text-[11px] font-bold text-coral hover:underline"
+          >
+            "¡A la camita... a la camita!" 🐭💤
+          </button>
+        </div>
+      </footer>
+
+      {/* Modals */}
+      <MemoryModal
+        isOpen={isMemoryModalOpen}
+        onClose={() => {
+          setIsMemoryModalOpen(false);
+          setMemoryToEdit(null);
+          setPrefillPlanForMemory(null);
+        }}
+        onSave={handleSaveMemory}
+        memoryToEdit={memoryToEdit}
+        settings={settings}
+        prefillPlanTitle={prefillPlanForMemory?.title}
+        prefillCategory={prefillPlanForMemory?.category}
+        prefillLocation={prefillPlanForMemory?.location}
+      />
+
+      <PlanModal
+        isOpen={isPlanModalOpen}
+        onClose={() => {
+          setIsPlanModalOpen(false);
+          setPlanToEdit(null);
+        }}
+        onSave={handleSavePlan}
+        planToEdit={planToEdit}
+      />
+
+      <PlaceModal
+        isOpen={isPlaceModalOpen}
+        onClose={() => {
+          setIsPlaceModalOpen(false);
+          setPlaceToEdit(null);
+        }}
+        onSave={handleSavePlace}
+        placeToEdit={placeToEdit}
+        settings={settings}
+      />
+
+      <TimeCapsuleModal
+        isOpen={isCapsuleModalOpen}
+        onClose={() => setIsCapsuleModalOpen(false)}
+        onSave={handleSaveCapsule}
+        settings={settings}
+      />
+
+      <BedtimeModal
+        isOpen={isBedtimeModalOpen}
+        onClose={() => setIsBedtimeModalOpen(false)}
+        partner1Name={settings.partner1.nickname}
+        partner2Name={settings.partner2.nickname}
+      />
+
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        settings={settings}
+        onSaveSettings={handleUpdateSettings}
+        onResetAllData={handleResetData}
+        onReloadAllData={handleReloadAll}
+        onTriggerSync={() => triggerBackgroundSync()}
+      />
+    </div>
+  );
+}
+
+export default App;

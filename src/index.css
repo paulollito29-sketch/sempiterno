@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-main: #FFFDF7;
+    --text-main: #181B23;
+  }
+  
+  .dark {
+    --bg-main: #181B23;
+    --text-main: #FFFDF7;
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    overflow-x: hidden;
+  }
+}
+
+/* Custom Neo-Brutalist utility classes */
+@layer components {
+  .neo-box {
+    @apply border-2 border-carbon bg-white rounded-2xl shadow-neo transition-all duration-150;
+  }
+  
+  .neo-box-dark {
+    @apply border-2 border-carbon bg-white dark:bg-nightSurface dark:border-cream/40 rounded-2xl shadow-neo dark:shadow-neo-dark transition-all duration-150;
+  }
+
+  .neo-btn {
+    @apply border-2 border-carbon rounded-xl font-bold shadow-neo transition-all duration-150 
+           hover:-translate-y-0.5 hover:shadow-neo-lg
+           active:translate-x-[2px] active:translate-y-[2px] active:shadow-none
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-neo;
+  }
+
+  .neo-btn-primary {
+    @apply neo-btn bg-coral text-white hover:bg-coral-hover;
+  }
+
+  .neo-btn-secondary {
+    @apply neo-btn bg-butter text-carbon hover:bg-butter-dark;
+  }
+
+  .neo-btn-rose {
+    @apply neo-btn bg-rosePastel text-carbon hover:bg-rosePastel-dark;
+  }
+
+  .neo-btn-white {
+    @apply neo-btn bg-white dark:bg-nightCard text-carbon dark:text-cream hover:bg-cream dark:hover:bg-nightSurface;
+  }
+
+  .neo-badge {
+    @apply border-2 border-carbon font-semibold text-xs px-2.5 py-1 rounded-full shadow-neo-sm;
+  }
+
+  .neo-input {
+    @apply border-2 border-carbon rounded-xl px-3.5 py-2.5 bg-white dark:bg-nightCard text-carbon dark:text-cream shadow-neo-sm focus:outline-none focus:ring-2 focus:ring-coral;
+  }
+}
+
+/* Custom Polaroid Font */
+.font-handwriting {
+  font-family: 'Caveat', cursive;
+}
+
+/* Smooth custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1ede3;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1e222d;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #FF6E61;
+  border-radius: 9999px;
+  border: 2px solid #181B23;
+}
