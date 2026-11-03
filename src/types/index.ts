@@ -105,7 +105,6 @@ export interface CoupleSettings {
   currentUser: 'Gigio' | 'Rosita';
   ratingStyle: 'cheese' | 'heart'; // quesitos vs corazones
   darkMode: boolean;
-  googleSheetsUrl?: string; // Google Apps Script Web App URL
   supabaseUrl?: string;
   supabaseAnonKey?: string;
 }

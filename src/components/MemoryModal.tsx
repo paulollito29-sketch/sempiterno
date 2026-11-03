@@ -5,7 +5,6 @@ import { Memory, MemoryCategory, CoupleSettings } from '../types';
 import { RatingDisplay } from './RatingDisplay';
 import { MouseEarsIcon } from './TopoEarsIcon';
 import { fireHeartConfetti } from '../utils/confetti';
-import { uploadPhotoToGoogleDrive } from '../utils/googleSheets';
 import { uploadPhotoToSupabase } from '../utils/supabase';
 
 interface MemoryModalProps {
@@ -72,18 +71,14 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
 
       let finalUrl: string | null = null;
 
-      // 1. Try Supabase Storage first
+      // 1. Try Supabase Storage
       if (settings.supabaseUrl && settings.supabaseAnonKey) {
         finalUrl = await uploadPhotoToSupabase(file, settings.supabaseUrl, settings.supabaseAnonKey);
         if (!finalUrl) {
-          throw new Error('No se pudo subir la foto a Supabase Storage. Revisa que el bucket "sempiterno-photos" esté creado.');
+          throw new Error('No se pudo subir la foto a Supabase Storage. Revisa la conexión.');
         }
       } 
-      // 2. Try Google Drive if configured
-      else if (settings.googleSheetsUrl) {
-        finalUrl = await uploadPhotoToGoogleDrive(settings.googleSheetsUrl, file);
-      } 
-      // 3. Fallback to Local Base64 preview
+      // 2. Fallback to Local Base64 preview
       else {
         finalUrl = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();

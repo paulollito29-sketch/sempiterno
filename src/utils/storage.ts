@@ -8,16 +8,16 @@ import {
 import { CoupleSettings, Memory, Place, Plan, TimeCapsule } from '../types';
 
 const STORAGE_KEYS = {
-  SETTINGS: 'sempiterno_settings_v3',
-  MEMORIES: 'sempiterno_memories_v3',
-  PLANS: 'sempiterno_plans_v3',
-  PLACES: 'sempiterno_places_v3',
-  CAPSULES: 'sempiterno_capsules_v3',
+  SETTINGS: 'sempiterno_settings_v4',
+  MEMORIES: 'sempiterno_memories_v4',
+  PLANS: 'sempiterno_plans_v4',
+  PLACES: 'sempiterno_places_v4',
+  CAPSULES: 'sempiterno_capsules_v4',
 };
 
 export function loadSettings(): CoupleSettings {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS) || localStorage.getItem('sempiterno_settings_v1');
+    const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS);
     if (!raw) return INITIAL_SETTINGS;
     const parsed = JSON.parse(raw);
     const startDate = (!parsed.startDate || parsed.startDate.startsWith('2023-08-18') || parsed.startDate.startsWith('2024-02-14'))
@@ -30,7 +30,6 @@ export function loadSettings(): CoupleSettings {
       startDate,
       supabaseUrl: parsed.supabaseUrl || INITIAL_SETTINGS.supabaseUrl,
       supabaseAnonKey: parsed.supabaseAnonKey || INITIAL_SETTINGS.supabaseAnonKey,
-      googleSheetsUrl: parsed.googleSheetsUrl || INITIAL_SETTINGS.googleSheetsUrl,
       partner1: {
         ...INITIAL_SETTINGS.partner1,
         ...(parsed.partner1 || {}),

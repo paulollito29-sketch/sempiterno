@@ -38,7 +38,7 @@ import {
 } from './utils/storage';
 import { isBedtime, calculateCountdown } from './utils/date';
 import { fireHeartConfetti, fireSuperCelebration } from './utils/confetti';
-import { fetchFromGoogleSheets, syncToGoogleSheets } from './utils/googleSheets';
+import { Heart } from 'lucide-react';
 import {
   fetchAllFromSupabase,
   syncMemoryToSupabase,
@@ -52,7 +52,6 @@ import {
   syncSettingsToSupabase,
   subscribeToSupabase,
 } from './utils/supabase';
-import { Heart, CloudCheck } from 'lucide-react';
 
 export function App() {
   // Settings & Theme
@@ -148,74 +147,11 @@ export function App() {
     };
   }, [settings.supabaseUrl, settings.supabaseAnonKey]);
 
-  // 2. Fallback fetch from Google Sheets on mount
-  useEffect(() => {
-    async function loadGoogleSheetsData() {
-      if (settings.googleSheetsUrl && settings.googleSheetsUrl.startsWith('http')) {
-        try {
-          const cloudData = await fetchFromGoogleSheets(settings.googleSheetsUrl);
-          if (cloudData) {
-            if (cloudData.settings) {
-              setSettings((prev) => {
-                const merged = { ...prev, ...cloudData.settings };
-                saveSettings(merged);
-                return merged;
-              });
-            }
-            if (cloudData.memories && cloudData.memories.length > 0) {
-              setMemories(cloudData.memories);
-              saveMemories(cloudData.memories);
-            }
-            if (cloudData.plans && cloudData.plans.length > 0) {
-              setPlans(cloudData.plans);
-              savePlans(cloudData.plans);
-            }
-            if (cloudData.places && cloudData.places.length > 0) {
-              setPlaces(cloudData.places);
-              savePlaces(cloudData.places);
-            }
-            if (cloudData.capsules && cloudData.capsules.length > 0) {
-              setCapsules(cloudData.capsules);
-              saveTimeCapsules(cloudData.capsules);
-            }
-          }
-        } catch (err) {
-          console.warn('Fallback a almacenamiento local tras error en Google Sheets:', err);
-        }
-      }
-    }
-    loadGoogleSheetsData();
-  }, [settings.googleSheetsUrl]);
-
-  // Background sync helper (Google Sheets)
-  const triggerBackgroundSync = async (
-    customSettings = settings,
-    customMemories = memories,
-    customPlans = plans,
-    customPlaces = places,
-    customCapsules = capsules
-  ) => {
-    if (customSettings.googleSheetsUrl && customSettings.googleSheetsUrl.startsWith('http')) {
-      try {
-        await syncToGoogleSheets(customSettings.googleSheetsUrl, {
-          settings: customSettings,
-          memories: customMemories,
-          plans: customPlans,
-          places: customPlaces,
-          capsules: customCapsules,
-        });
-      } catch (e) {
-        console.warn('Error en sincronización en segundo plano:', e);
-      }
-    }
-  };
-
-  // Save changes to storage
+  // Save changes to storage & sync live to Supabase for both Paulo and Alexandra
   const handleUpdateSettings = (newSettings: CoupleSettings) => {
     setSettings(newSettings);
     saveSettings(newSettings);
     syncSettingsToSupabase(newSettings, newSettings.supabaseUrl, newSettings.supabaseAnonKey);
-    triggerBackgroundSync(newSettings);
   };
 
   const handleReloadAll = () => {
@@ -244,7 +180,6 @@ export function App() {
     setMemories(updated);
     saveMemories(updated);
     syncMemoryToSupabase(newMemory, settings.supabaseUrl, settings.supabaseAnonKey);
-    triggerBackgroundSync(settings, updated);
   };
 
   const handleDeleteMemory = (memoryId: string) => {
@@ -252,7 +187,6 @@ export function App() {
     setMemories(updated);
     saveMemories(updated);
     deleteMemoryFromSupabase(memoryId, settings.supabaseUrl, settings.supabaseAnonKey);
-    triggerBackgroundSync(settings, updated);
   };
 
   // --- PLAN HANDLERS ---
@@ -267,7 +201,6 @@ export function App() {
     setPlans(updated);
     savePlans(updated);
     syncPlanToSupabase(newPlan, settings.supabaseUrl, settings.supabaseAnonKey);
-    triggerBackgroundSync(settings, memories, updated);
   };
 
   const handleDeletePlan = (planId: string) => {
@@ -275,7 +208,6 @@ export function App() {
     setPlans(updated);
     savePlans(updated);
     deletePlanFromSupabase(planId, settings.supabaseUrl, settings.supabaseAnonKey);
-    triggerBackgroundSync(settings, memories, updated);
   };
 
   const handleUpdatePlanStatus = (planId: string, newStatus: PlanStatus) => {
@@ -292,7 +224,6 @@ export function App() {
     if (targetPlan) {
       syncPlanToSupabase(targetPlan, settings.supabaseUrl, settings.supabaseAnonKey);
     }
-    triggerBackgroundSync(settings, memories, updated);
   };
 
   // Convert Plan to Memory
@@ -328,7 +259,6 @@ export function App() {
     setPlaces(updated);
     savePlaces(updated);
     syncPlaceToSupabase(newPlace, settings.supabaseUrl, settings.supabaseAnonKey);
-    triggerBackgroundSync(settings, memories, plans, updated);
   };
 
   const handleDeletePlace = (placeId: string) => {
@@ -336,7 +266,6 @@ export function App() {
     setPlaces(updated);
     savePlaces(updated);
     deletePlaceFromSupabase(placeId, settings.supabaseUrl, settings.supabaseAnonKey);
-    triggerBackgroundSync(settings, memories, plans, updated);
   };
 
   const handleTogglePlaceStatus = (place: Place) => {
@@ -359,7 +288,6 @@ export function App() {
     if (targetPlace) {
       syncPlaceToSupabase(targetPlace, settings.supabaseUrl, settings.supabaseAnonKey);
     }
-    triggerBackgroundSync(settings, memories, plans, updated);
     fireHeartConfetti();
   };
 
@@ -369,7 +297,6 @@ export function App() {
     setCapsules(updated);
     saveTimeCapsules(updated);
     syncCapsuleToSupabase(newCapsule, settings.supabaseUrl, settings.supabaseAnonKey);
-    triggerBackgroundSync(settings, memories, plans, places, updated);
     fireHeartConfetti();
   };
 
@@ -378,7 +305,6 @@ export function App() {
     setCapsules(updated);
     saveTimeCapsules(updated);
     deleteCapsuleFromSupabase(capsuleId, settings.supabaseUrl, settings.supabaseAnonKey);
-    triggerBackgroundSync(settings, memories, plans, places, updated);
   };
 
   const handleOpenCapsuleContent = (capsuleId: string) => {
@@ -395,7 +321,6 @@ export function App() {
     if (targetCap) {
       syncCapsuleToSupabase(targetCap, settings.supabaseUrl, settings.supabaseAnonKey);
     }
-    triggerBackgroundSync(settings, memories, plans, places, updated);
   };
 
   // --- ROULETTE CHALLENGE ACCEPT ---
@@ -631,7 +556,6 @@ export function App() {
         onSaveSettings={handleUpdateSettings}
         onResetAllData={handleResetData}
         onReloadAllData={handleReloadAll}
-        onTriggerSync={() => triggerBackgroundSync()}
       />
     </div>
   );
