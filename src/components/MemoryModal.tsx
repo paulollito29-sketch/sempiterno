@@ -6,6 +6,7 @@ import { RatingDisplay } from './RatingDisplay';
 import { MouseEarsIcon } from './TopoEarsIcon';
 import { fireHeartConfetti } from '../utils/confetti';
 import { uploadPhotoToGoogleDrive } from '../utils/googleSheets';
+import { uploadPhotoToSupabase } from '../utils/supabase';
 
 interface MemoryModalProps {
   isOpen: boolean;
@@ -65,27 +66,45 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!settings.googleSheetsUrl) {
-      alert('Para subir fotos directo a tu Google Drive, primero ingresa la URL de tu Google Apps Script en Ajustes ⚙️');
-      return;
-    }
-
     try {
       setIsUploadingPhoto(true);
       setUploadError(null);
-      const driveUrl = await uploadPhotoToGoogleDrive(settings.googleSheetsUrl, file);
-      if (driveUrl) {
+
+      let finalUrl: string | null = null;
+
+      // 1. Try Supabase Storage first
+      if (settings.supabaseUrl && settings.supabaseAnonKey) {
+        finalUrl = await uploadPhotoToSupabase(file, settings.supabaseUrl, settings.supabaseAnonKey);
+        if (!finalUrl) {
+          throw new Error('No se pudo subir la foto a Supabase Storage. Revisa que el bucket "sempiterno-photos" esté creado.');
+        }
+      } 
+      // 2. Try Google Drive if configured
+      else if (settings.googleSheetsUrl) {
+        finalUrl = await uploadPhotoToGoogleDrive(settings.googleSheetsUrl, file);
+      } 
+      // 3. Fallback to Local Base64 preview
+      else {
+        finalUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error('Error al procesar la foto'));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      if (finalUrl) {
         const updated = [...photoUrls];
         if (!updated[0] || updated[0].trim() === '') {
-          updated[0] = driveUrl;
+          updated[0] = finalUrl;
         } else {
-          updated.push(driveUrl);
+          updated.push(finalUrl);
         }
         setPhotoUrls(updated);
         fireHeartConfetti();
       }
     } catch (err: any) {
-      setUploadError(err.message || 'Error al subir foto a Google Drive');
+      setUploadError(err.message || 'Error al subir foto');
     } finally {
       setIsUploadingPhoto(false);
       if (fileInputRef.current) fileInputRef.current.value = '';

@@ -106,7 +106,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const handleSaveStartDate = (e: React.FormEvent) => {
     e.preventDefault();
     if (tempStartDate) {
-      onUpdateStartDate(`${tempStartDate}T19:30:00`);
+      onUpdateStartDate(`${tempStartDate}T00:00:00`);
       setIsEditingStartDate(false);
       fireHeartConfetti();
     }

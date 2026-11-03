@@ -1,7 +1,7 @@
 import { Memory, Plan, Place, TimeCapsule, CoupleSettings } from '../types';
 
 export const INITIAL_SETTINGS: CoupleSettings = {
-  startDate: "2023-08-18T19:30:00",
+  startDate: "2026-06-04T00:00:00",
   partner1: {
     name: "Paulo",
     nickname: "Gigio",

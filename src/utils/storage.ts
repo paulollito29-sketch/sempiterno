@@ -20,9 +20,16 @@ export function loadSettings(): CoupleSettings {
     const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS) || localStorage.getItem('sempiterno_settings_v1');
     if (!raw) return INITIAL_SETTINGS;
     const parsed = JSON.parse(raw);
+    const startDate = (!parsed.startDate || parsed.startDate.startsWith('2023-08-18') || parsed.startDate.startsWith('2024-02-14'))
+      ? INITIAL_SETTINGS.startDate
+      : parsed.startDate;
+
     const settings: CoupleSettings = {
       ...INITIAL_SETTINGS,
       ...parsed,
+      startDate,
+      supabaseUrl: parsed.supabaseUrl || INITIAL_SETTINGS.supabaseUrl,
+      supabaseAnonKey: parsed.supabaseAnonKey || INITIAL_SETTINGS.supabaseAnonKey,
       googleSheetsUrl: parsed.googleSheetsUrl || INITIAL_SETTINGS.googleSheetsUrl,
       partner1: {
         ...INITIAL_SETTINGS.partner1,

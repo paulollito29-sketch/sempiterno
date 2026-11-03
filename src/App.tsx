@@ -39,6 +39,19 @@ import {
 import { isBedtime, calculateCountdown } from './utils/date';
 import { fireHeartConfetti, fireSuperCelebration } from './utils/confetti';
 import { fetchFromGoogleSheets, syncToGoogleSheets } from './utils/googleSheets';
+import {
+  fetchAllFromSupabase,
+  syncMemoryToSupabase,
+  deleteMemoryFromSupabase,
+  syncPlanToSupabase,
+  deletePlanFromSupabase,
+  syncPlaceToSupabase,
+  deletePlaceFromSupabase,
+  syncCapsuleToSupabase,
+  deleteCapsuleFromSupabase,
+  syncSettingsToSupabase,
+  subscribeToSupabase,
+} from './utils/supabase';
 import { Heart, CloudCheck } from 'lucide-react';
 
 export function App() {
@@ -83,9 +96,61 @@ export function App() {
     }
   }, [settings.darkMode]);
 
-  // Live fetch from Google Sheets on mount with fallback
+  // 1. Supabase Realtime & Cloud Data Fetch
   useEffect(() => {
-    async function loadCloudData() {
+    let isMounted = true;
+
+    async function loadSupabase() {
+      if (!settings.supabaseUrl && !(import.meta as any).env?.VITE_SUPABASE_URL) return;
+
+      try {
+        const cloudData = await fetchAllFromSupabase(settings.supabaseUrl, settings.supabaseAnonKey);
+        if (cloudData && isMounted) {
+          if (cloudData.settings) {
+            setSettings((prev) => {
+              const merged = { ...prev, ...cloudData.settings };
+              saveSettings(merged);
+              return merged;
+            });
+          }
+          if (cloudData.memories) {
+            setMemories(cloudData.memories);
+            saveMemories(cloudData.memories);
+          }
+          if (cloudData.plans) {
+            setPlans(cloudData.plans);
+            savePlans(cloudData.plans);
+          }
+          if (cloudData.places) {
+            setPlaces(cloudData.places);
+            savePlaces(cloudData.places);
+          }
+          if (cloudData.capsules) {
+            setCapsules(cloudData.capsules);
+            saveTimeCapsules(cloudData.capsules);
+          }
+        }
+      } catch (err) {
+        console.warn('Error cargando datos de Supabase:', err);
+      }
+    }
+
+    loadSupabase();
+
+    const unsubscribe = subscribeToSupabase(() => {
+      console.log('⚡ Sincronización en vivo recibida desde Supabase');
+      loadSupabase();
+    }, settings.supabaseUrl, settings.supabaseAnonKey);
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [settings.supabaseUrl, settings.supabaseAnonKey]);
+
+  // 2. Fallback fetch from Google Sheets on mount
+  useEffect(() => {
+    async function loadGoogleSheetsData() {
       if (settings.googleSheetsUrl && settings.googleSheetsUrl.startsWith('http')) {
         try {
           const cloudData = await fetchFromGoogleSheets(settings.googleSheetsUrl);
@@ -119,10 +184,10 @@ export function App() {
         }
       }
     }
-    loadCloudData();
+    loadGoogleSheetsData();
   }, [settings.googleSheetsUrl]);
 
-  // Background sync helper
+  // Background sync helper (Google Sheets)
   const triggerBackgroundSync = async (
     customSettings = settings,
     customMemories = memories,
@@ -149,6 +214,7 @@ export function App() {
   const handleUpdateSettings = (newSettings: CoupleSettings) => {
     setSettings(newSettings);
     saveSettings(newSettings);
+    syncSettingsToSupabase(newSettings, newSettings.supabaseUrl, newSettings.supabaseAnonKey);
     triggerBackgroundSync(newSettings);
   };
 
@@ -177,6 +243,7 @@ export function App() {
     }
     setMemories(updated);
     saveMemories(updated);
+    syncMemoryToSupabase(newMemory, settings.supabaseUrl, settings.supabaseAnonKey);
     triggerBackgroundSync(settings, updated);
   };
 
@@ -184,6 +251,7 @@ export function App() {
     const updated = memories.filter((m) => m.id !== memoryId);
     setMemories(updated);
     saveMemories(updated);
+    deleteMemoryFromSupabase(memoryId, settings.supabaseUrl, settings.supabaseAnonKey);
     triggerBackgroundSync(settings, updated);
   };
 
@@ -198,6 +266,7 @@ export function App() {
     }
     setPlans(updated);
     savePlans(updated);
+    syncPlanToSupabase(newPlan, settings.supabaseUrl, settings.supabaseAnonKey);
     triggerBackgroundSync(settings, memories, updated);
   };
 
@@ -205,18 +274,24 @@ export function App() {
     const updated = plans.filter((p) => p.id !== planId);
     setPlans(updated);
     savePlans(updated);
+    deletePlanFromSupabase(planId, settings.supabaseUrl, settings.supabaseAnonKey);
     triggerBackgroundSync(settings, memories, updated);
   };
 
   const handleUpdatePlanStatus = (planId: string, newStatus: PlanStatus) => {
+    let targetPlan: Plan | undefined;
     const updated = plans.map((p) => {
       if (p.id === planId) {
-        return { ...p, status: newStatus };
+        targetPlan = { ...p, status: newStatus };
+        return targetPlan;
       }
       return p;
     });
     setPlans(updated);
     savePlans(updated);
+    if (targetPlan) {
+      syncPlanToSupabase(targetPlan, settings.supabaseUrl, settings.supabaseAnonKey);
+    }
     triggerBackgroundSync(settings, memories, updated);
   };
 
@@ -252,6 +327,7 @@ export function App() {
     }
     setPlaces(updated);
     savePlaces(updated);
+    syncPlaceToSupabase(newPlace, settings.supabaseUrl, settings.supabaseAnonKey);
     triggerBackgroundSync(settings, memories, plans, updated);
   };
 
@@ -259,24 +335,30 @@ export function App() {
     const updated = places.filter((p) => p.id !== placeId);
     setPlaces(updated);
     savePlaces(updated);
+    deletePlaceFromSupabase(placeId, settings.supabaseUrl, settings.supabaseAnonKey);
     triggerBackgroundSync(settings, memories, plans, updated);
   };
 
   const handleTogglePlaceStatus = (place: Place) => {
     const newStatus: 'Visitado' | 'Por conocer' = place.status === 'Visitado' ? 'Por conocer' : 'Visitado';
     const newVerdict: ReturnVerdict = newStatus === 'Visitado' ? '¡Sí o sí!' : 'Pendiente de probar';
+    let targetPlace: Place | undefined;
     const updated: Place[] = places.map((p) => {
       if (p.id === place.id) {
-        return {
+        targetPlace = {
           ...p,
           status: newStatus,
           wouldReturn: newVerdict,
         };
+        return targetPlace;
       }
       return p;
     });
     setPlaces(updated);
     savePlaces(updated);
+    if (targetPlace) {
+      syncPlaceToSupabase(targetPlace, settings.supabaseUrl, settings.supabaseAnonKey);
+    }
     triggerBackgroundSync(settings, memories, plans, updated);
     fireHeartConfetti();
   };
@@ -286,6 +368,7 @@ export function App() {
     const updated = [newCapsule, ...capsules];
     setCapsules(updated);
     saveTimeCapsules(updated);
+    syncCapsuleToSupabase(newCapsule, settings.supabaseUrl, settings.supabaseAnonKey);
     triggerBackgroundSync(settings, memories, plans, places, updated);
     fireHeartConfetti();
   };
@@ -294,18 +377,24 @@ export function App() {
     const updated = capsules.filter((c) => c.id !== capsuleId);
     setCapsules(updated);
     saveTimeCapsules(updated);
+    deleteCapsuleFromSupabase(capsuleId, settings.supabaseUrl, settings.supabaseAnonKey);
     triggerBackgroundSync(settings, memories, plans, places, updated);
   };
 
   const handleOpenCapsuleContent = (capsuleId: string) => {
+    let targetCap: TimeCapsule | undefined;
     const updated = capsules.map((c) => {
       if (c.id === capsuleId) {
-        return { ...c, isCustomOpened: true };
+        targetCap = { ...c, isCustomOpened: true };
+        return targetCap;
       }
       return c;
     });
     setCapsules(updated);
     saveTimeCapsules(updated);
+    if (targetCap) {
+      syncCapsuleToSupabase(targetCap, settings.supabaseUrl, settings.supabaseAnonKey);
+    }
     triggerBackgroundSync(settings, memories, plans, places, updated);
   };
 

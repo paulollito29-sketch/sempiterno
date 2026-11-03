@@ -71,9 +71,27 @@ export const Header: React.FC<HeaderProps> = ({
               <h1 className="font-display text-xl sm:text-2xl font-black tracking-tight text-carbon dark:text-cream">
                 Sempiterno
               </h1>
-              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold bg-butter border border-carbon px-2 py-0.5 rounded-full shadow-neo-sm">
-                <Sparkles className="w-2.5 h-2.5 text-coral" /> Amor Infinito
-              </span>
+              {settings.supabaseUrl && settings.supabaseAnonKey ? (
+                <button
+                  type="button"
+                  onClick={onOpenSettings}
+                  className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold bg-sage/60 border border-carbon px-2 py-0.5 rounded-full shadow-neo-sm text-carbon hover:bg-sage transition-colors"
+                  title="Sincronización en tiempo real activa con Supabase"
+                >
+                  <span className="w-2 h-2 rounded-full bg-green-600 animate-pulse"></span>
+                  <span>Supabase En Vivo ⚡</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onOpenSettings}
+                  className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold bg-butter border border-carbon px-2 py-0.5 rounded-full shadow-neo-sm text-carbon hover:bg-butter-light transition-colors"
+                  title="Haz clic para conectar Supabase y sincronizar con Alexandra"
+                >
+                  <Sparkles className="w-2.5 h-2.5 text-coral" />
+                  <span>Conectar Nube</span>
+                </button>
+              )}
             </div>
             <p className="text-[11px] sm:text-xs text-carbon/70 dark:text-cream/70 font-semibold truncate">
               {settings.partner1?.nickname || 'Gigio'} & {settings.partner2?.nickname || 'Rosita'} • Nuestro Archivo

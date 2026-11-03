@@ -89,7 +89,7 @@ export interface TimeCapsule {
 }
 
 export interface CoupleSettings {
-  startDate: string; // e.g. "2023-10-14T20:00:00"
+  startDate: string; // e.g. "2026-06-04T00:00:00"
   partner1: {
     name: string;
     nickname: string;
@@ -106,4 +106,6 @@ export interface CoupleSettings {
   ratingStyle: 'cheese' | 'heart'; // quesitos vs corazones
   darkMode: boolean;
   googleSheetsUrl?: string; // Google Apps Script Web App URL
+  supabaseUrl?: string;
+  supabaseAnonKey?: string;
 }
