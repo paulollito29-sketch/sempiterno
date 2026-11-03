@@ -107,7 +107,11 @@ export function App() {
         if (cloudData && isMounted) {
           if (cloudData.settings) {
             setSettings((prev) => {
-              const merged = { ...prev, ...cloudData.settings };
+              const merged = {
+                ...prev,
+                ...cloudData.settings,
+                currentUser: prev.currentUser || 'Gigio',
+              };
               saveSettings(merged);
               return merged;
             });
