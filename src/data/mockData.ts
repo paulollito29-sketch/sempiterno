@@ -17,6 +17,7 @@ export const INITIAL_SETTINGS: CoupleSettings = {
   currentUser: "Gigio",
   ratingStyle: "cheese",
   darkMode: false,
+  googleSheetsUrl: "https://script.google.com/macros/s/AKfycbyKLSU-hIduYtTh421x3w0FYmbHTvfyAghQ4M2G2NiNVkpZg4g6686iM7u8QMPtv3M/exec",
 };
 
 export const INITIAL_MEMORIES: Memory[] = [

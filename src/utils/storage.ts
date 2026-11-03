@@ -23,6 +23,7 @@ export function loadSettings(): CoupleSettings {
     const settings: CoupleSettings = {
       ...INITIAL_SETTINGS,
       ...parsed,
+      googleSheetsUrl: parsed.googleSheetsUrl || INITIAL_SETTINGS.googleSheetsUrl,
       partner1: {
         ...INITIAL_SETTINGS.partner1,
         ...(parsed.partner1 || {}),
