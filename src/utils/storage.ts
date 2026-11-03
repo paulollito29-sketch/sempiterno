@@ -20,11 +20,19 @@ export function loadSettings(): CoupleSettings {
     const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS);
     if (!raw) return INITIAL_SETTINGS;
     const parsed = JSON.parse(raw);
-    const settings: CoupleSettings = { ...INITIAL_SETTINGS, ...parsed };
-    if (!settings.partner2?.name || settings.partner2.name === 'Mi Amor') {
-      settings.partner2 = { ...settings.partner2, name: 'Alexandra' };
-      saveSettings(settings);
-    }
+    const settings: CoupleSettings = {
+      ...INITIAL_SETTINGS,
+      ...parsed,
+      partner1: {
+        ...INITIAL_SETTINGS.partner1,
+        ...(parsed.partner1 || {}),
+      },
+      partner2: {
+        ...INITIAL_SETTINGS.partner2,
+        ...(parsed.partner2 || {}),
+        name: (!parsed.partner2?.name || parsed.partner2.name === 'Mi Amor') ? 'Alexandra' : parsed.partner2.name,
+      },
+    };
     return settings;
   } catch {
     return INITIAL_SETTINGS;
@@ -43,7 +51,8 @@ export function loadMemories(): Memory[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.MEMORIES);
     if (!raw) return INITIAL_MEMORIES;
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_MEMORIES;
   } catch {
     return INITIAL_MEMORIES;
   }
@@ -61,7 +70,8 @@ export function loadPlans(): Plan[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.PLANS);
     if (!raw) return INITIAL_PLANS;
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_PLANS;
   } catch {
     return INITIAL_PLANS;
   }
@@ -79,7 +89,8 @@ export function loadPlaces(): Place[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.PLACES);
     if (!raw) return INITIAL_PLACES;
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_PLACES;
   } catch {
     return INITIAL_PLACES;
   }
@@ -97,7 +108,8 @@ export function loadTimeCapsules(): TimeCapsule[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.CAPSULES);
     if (!raw) return INITIAL_TIME_CAPSULES;
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_TIME_CAPSULES;
   } catch {
     return INITIAL_TIME_CAPSULES;
   }

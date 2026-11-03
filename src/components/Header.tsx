@@ -76,7 +76,7 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </div>
             <p className="text-[11px] sm:text-xs text-carbon/70 dark:text-cream/70 font-semibold truncate">
-              {settings.partner1.nickname} & {settings.partner2.nickname} • Nuestro Archivo
+              {settings.partner1?.nickname || 'Gigio'} & {settings.partner2?.nickname || 'Rosita'} • Nuestro Archivo
             </p>
           </div>
         </div>
@@ -117,8 +117,8 @@ export const Header: React.FC<HeaderProps> = ({
             />
             <span className="hidden sm:inline">
               {settings.currentUser === 'Gigio'
-                ? `${settings.partner1.nickname} (${settings.partner1.name})`
-                : `${settings.partner2.nickname} (${settings.partner2.name})`}
+                ? `${settings.partner1?.nickname || 'Gigio'} (${settings.partner1?.name || 'Paulo'})`
+                : `${settings.partner2?.nickname || 'Rosita'} (${settings.partner2?.name || 'Alexandra'})`}
             </span>
             <span className="text-[10px] bg-white/70 px-1 py-0.2 rounded border border-carbon">
               ⇄

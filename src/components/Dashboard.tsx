@@ -133,7 +133,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <span>Nuestra historia de amor</span>
               </div>
               <h2 className="font-display text-2xl sm:text-3xl font-black text-carbon dark:text-cream leading-tight">
-                ¡Hola, {settings.currentUser === 'Gigio' ? settings.partner1.nickname : settings.partner2.nickname}! 🐭❤️
+                ¡Hola, {settings.currentUser === 'Gigio' ? (settings.partner1?.nickname || 'Gigio') : (settings.partner2?.nickname || 'Rosita')}! 🐭❤️
               </h2>
               <p className="text-xs sm:text-sm text-carbon/80 dark:text-cream/80 font-medium">
                 Hoy es un día perfecto para recordar lo felices que somos y soñar con lo que viene.

@@ -531,8 +531,8 @@ export function App() {
       <BedtimeModal
         isOpen={isBedtimeModalOpen}
         onClose={() => setIsBedtimeModalOpen(false)}
-        partner1Name={settings.partner1.name}
-        partner2Name={settings.partner2.name}
+        partner1Name={settings.partner1?.name || 'Paulo'}
+        partner2Name={settings.partner2?.name || 'Alexandra'}
       />
 
       <SettingsModal
