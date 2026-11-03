@@ -108,3 +108,12 @@ export interface CoupleSettings {
   supabaseUrl?: string;
   supabaseAnonKey?: string;
 }
+
+export interface KissesData {
+  totalKisses: number;
+  gigioKisses: number;
+  rositaKisses: number;
+  lastSender: 'Gigio' | 'Rosita';
+  lastSenderName: string;
+  lastKissAt: string;
+}

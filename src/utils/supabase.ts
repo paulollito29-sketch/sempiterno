@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { CoupleSettings, Memory, Plan, Place, TimeCapsule } from '../types';
+import { CoupleSettings, Memory, Plan, Place, TimeCapsule, KissesData } from '../types';
 
 let cachedClient: SupabaseClient | null = null;
 let cachedUrl = '';
@@ -213,6 +213,17 @@ function capsuleToRow(c: TimeCapsule) {
   };
 }
 
+function kissesFromRow(row: any): KissesData {
+  return {
+    totalKisses: Number(row?.total_kisses || 0),
+    gigioKisses: Number(row?.gigio_kisses || 0),
+    rositaKisses: Number(row?.rosita_kisses || 0),
+    lastSender: row?.last_sender || 'Gigio',
+    lastSenderName: row?.last_sender_name || 'Paulo',
+    lastKissAt: row?.last_kiss_at || new Date().toISOString(),
+  };
+}
+
 // ------------------------------------------------------------------------------
 // DATA FETCHING & SYNCHRONIZATION
 // ------------------------------------------------------------------------------
@@ -223,6 +234,7 @@ export interface SupabaseFullData {
   plans: Plan[];
   places: Place[];
   capsules: TimeCapsule[];
+  kisses?: KissesData;
 }
 
 export async function fetchAllFromSupabase(
@@ -233,12 +245,13 @@ export async function fetchAllFromSupabase(
   if (!client) return null;
 
   try {
-    const [settingsRes, memRes, plansRes, placesRes, capsRes] = await Promise.all([
+    const [settingsRes, memRes, plansRes, placesRes, capsRes, kissesRes] = await Promise.all([
       client.from('sempiterno_settings').select('*').limit(1),
       client.from('sempiterno_memories').select('*').order('date', { ascending: false }),
       client.from('sempiterno_plans').select('*').order('created_at', { ascending: false }),
       client.from('sempiterno_places').select('*').order('name', { ascending: true }),
       client.from('sempiterno_capsules').select('*').order('unlock_date', { ascending: true }),
+      client.from('sempiterno_kisses').select('*').eq('id', 'main').maybeSingle(),
     ]);
 
     let loadedSettings: CoupleSettings | undefined = undefined;
@@ -262,9 +275,60 @@ export async function fetchAllFromSupabase(
       plans: (plansRes.data || []).map(planFromRow),
       places: (placesRes.data || []).map(placeFromRow),
       capsules: (capsRes.data || []).map(capsuleFromRow),
+      kisses: kissesRes.data ? kissesFromRow(kissesRes.data) : undefined,
     };
   } catch (err) {
     console.warn('Error fetching all from Supabase:', err);
+    return null;
+  }
+}
+
+export async function sendKissToSupabase(
+  sender: 'Gigio' | 'Rosita',
+  senderName: string,
+  customUrl?: string,
+  customKey?: string
+): Promise<KissesData | null> {
+  const client = getSupabase(customUrl, customKey);
+  if (!client) return null;
+
+  try {
+    const { data: current } = await client
+      .from('sempiterno_kisses')
+      .select('*')
+      .eq('id', 'main')
+      .maybeSingle();
+
+    const currentTotal = Number(current?.total_kisses || 0);
+    const gigioKisses = Number(current?.gigio_kisses || 0) + (sender === 'Gigio' ? 1 : 0);
+    const rositaKisses = Number(current?.rosita_kisses || 0) + (sender === 'Rosita' ? 1 : 0);
+    const now = new Date().toISOString();
+
+    const row = {
+      id: 'main',
+      total_kisses: currentTotal + 1,
+      gigio_kisses: gigioKisses,
+      rosita_kisses: rositaKisses,
+      last_sender: sender,
+      last_sender_name: senderName,
+      last_kiss_at: now,
+      updated_at: now,
+    };
+
+    const { data, error } = await client
+      .from('sempiterno_kisses')
+      .upsert(row)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error enviando beso a Supabase:', error);
+      return null;
+    }
+
+    return kissesFromRow(data);
+  } catch (err) {
+    console.error('Error en sendKissToSupabase:', err);
     return null;
   }
 }

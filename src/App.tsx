@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from './components/Header';
 import { Navbar, NavTab } from './components/Navbar';
 import { Dashboard } from './components/Dashboard';
@@ -21,7 +22,8 @@ import {
   TimeCapsule, 
   PlanStatus,
   MemoryCategory,
-  ReturnVerdict
+  ReturnVerdict,
+  KissesData
 } from './types';
 import {
   loadSettings,
@@ -38,7 +40,7 @@ import {
 } from './utils/storage';
 import { isBedtime, calculateCountdown } from './utils/date';
 import { fireHeartConfetti, fireSuperCelebration } from './utils/confetti';
-import { Heart } from 'lucide-react';
+import { Heart, X } from 'lucide-react';
 import {
   fetchAllFromSupabase,
   syncMemoryToSupabase,
@@ -51,6 +53,7 @@ import {
   deleteCapsuleFromSupabase,
   syncSettingsToSupabase,
   subscribeToSupabase,
+  sendKissToSupabase,
 } from './utils/supabase';
 
 export function App() {
@@ -85,6 +88,10 @@ export function App() {
   const [isCapsuleModalOpen, setIsCapsuleModalOpen] = useState(false);
   const [isBedtimeModalOpen, setIsBedtimeModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
+  // Realtime Bedtime Kisses
+  const [kissesData, setKissesData] = useState<KissesData | undefined>(undefined);
+  const [incomingKissAlert, setIncomingKissAlert] = useState<{ senderName: string; time: string } | null>(null);
 
   // Sync dark mode class
   useEffect(() => {
@@ -132,6 +139,28 @@ export function App() {
             setCapsules(cloudData.capsules);
             saveTimeCapsules(cloudData.capsules);
           }
+          if (cloudData.kisses) {
+            setKissesData((prev) => {
+              // If new kisses received from the other partner, alert the user!
+              if (
+                prev &&
+                cloudData.kisses &&
+                cloudData.kisses.totalKisses > prev.totalKisses &&
+                cloudData.kisses.lastSender !== settings.currentUser
+              ) {
+                const senderNick =
+                  cloudData.kisses.lastSender === 'Gigio'
+                    ? settings.partner1?.nickname || 'Gigio'
+                    : settings.partner2?.nickname || 'Rosita';
+                setIncomingKissAlert({
+                  senderName: senderNick,
+                  time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                });
+                fireHeartConfetti();
+              }
+              return cloudData.kisses;
+            });
+          }
         }
       } catch (err) {
         console.warn('Error cargando datos de Supabase:', err);
@@ -149,7 +178,23 @@ export function App() {
       isMounted = false;
       unsubscribe();
     };
-  }, [settings.supabaseUrl, settings.supabaseAnonKey]);
+  }, [settings.supabaseUrl, settings.supabaseAnonKey, settings.currentUser]);
+
+  // Send bedtime kiss in real time
+  const handleSendKiss = async () => {
+    const isGigio = settings.currentUser === 'Gigio';
+    const senderRole = isGigio ? 'Gigio' : 'Rosita';
+    const senderName = isGigio ? (settings.partner1.name || 'Paulo') : (settings.partner2.name || 'Alexandra');
+    const updated = await sendKissToSupabase(
+      senderRole,
+      senderName,
+      settings.supabaseUrl,
+      settings.supabaseAnonKey
+    );
+    if (updated) {
+      setKissesData(updated);
+    }
+  };
 
   // Save changes to storage & sync live to Supabase for both Paulo and Alexandra
   const handleUpdateSettings = (newSettings: CoupleSettings) => {
@@ -475,6 +520,49 @@ export function App() {
         )}
       </main>
 
+      {/* Realtime Incoming Kiss Alert */}
+      <AnimatePresence>
+        {incomingKissAlert && (
+          <motion.div
+            initial={{ opacity: 0, y: -40, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -40, scale: 0.95 }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-sm w-[92%] bg-butter border-3 border-carbon rounded-2xl p-3.5 shadow-neo-lg flex items-center justify-between gap-3"
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="text-2xl animate-bounce">💋</span>
+              <div>
+                <p className="font-display font-black text-xs text-carbon">
+                  ¡{incomingKissAlert.senderName} te mandó un besito! ❤️
+                </p>
+                <p className="text-[10px] text-carbon/70 font-semibold">
+                  "¡A la camita... que descanses bien!" 💤
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsBedtimeModalOpen(true);
+                  setIncomingKissAlert(null);
+                }}
+                className="neo-btn-primary text-[10px] py-1 px-2.5 font-bold"
+              >
+                Ver 🐭
+              </button>
+              <button
+                type="button"
+                onClick={() => setIncomingKissAlert(null)}
+                className="p-1 rounded-lg border border-carbon hover:bg-carbon/10 transition-colors"
+              >
+                <X className="w-3.5 h-3.5 text-carbon" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Footer */}
       <footer className="border-t-2 border-carbon bg-white dark:bg-nightCard py-6 px-4 text-center text-xs font-semibold text-carbon/70 dark:text-cream/70">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -489,7 +577,7 @@ export function App() {
           <div className="flex items-center gap-1.5 text-xs">
             <span>Hecho con</span>
             <Heart className="w-3.5 h-3.5 text-coral fill-coral inline" />
-            <span>para {settings.partner1.name} & {settings.partner2.name} 🐭❤️</span>
+            <span>solo para {settings.partner2?.name || 'Alexandra'} 🎀❤️</span>
           </div>
 
           <button
@@ -549,8 +637,9 @@ export function App() {
       <BedtimeModal
         isOpen={isBedtimeModalOpen}
         onClose={() => setIsBedtimeModalOpen(false)}
-        partner1Name={settings.partner1?.name || 'Paulo'}
-        partner2Name={settings.partner2?.name || 'Alexandra'}
+        settings={settings}
+        kissesData={kissesData}
+        onSendKiss={handleSendKiss}
       />
 
       <SettingsModal
