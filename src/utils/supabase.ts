@@ -6,8 +6,11 @@ let cachedUrl = '';
 let cachedKey = '';
 
 export function getSupabase(customUrl?: string, customKey?: string): SupabaseClient | null {
-  const url = (customUrl || (import.meta as any).env?.VITE_SUPABASE_URL || '').trim();
+  let url = (customUrl || (import.meta as any).env?.VITE_SUPABASE_URL || '').trim();
   const key = (customKey || (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '').trim();
+
+  // Normalize URL in case user pasted the rest/v1 endpoint
+  url = url.replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
 
   if (!url || !key) return null;
 
@@ -33,10 +36,11 @@ export function getSupabase(customUrl?: string, customKey?: string): SupabaseCli
 }
 
 export async function testSupabaseConnection(
-  url: string,
+  rawUrl: string,
   key: string
 ): Promise<{ ok: boolean; message: string }> {
   try {
+    const url = rawUrl.trim().replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
     if (!url.startsWith('http')) {
       return { ok: false, message: 'La URL de Supabase debe comenzar con https://' };
     }

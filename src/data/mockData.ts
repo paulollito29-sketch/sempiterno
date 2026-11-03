@@ -17,6 +17,8 @@ export const INITIAL_SETTINGS: CoupleSettings = {
   currentUser: "Gigio",
   ratingStyle: "cheese",
   darkMode: false,
+  supabaseUrl: "https://kzdtxkzriobixfismbce.supabase.co",
+  supabaseAnonKey: "sb_publishable_M7W38LZzBVa-4rnqJEz3pQ_VM7ijH7l",
 };
 
 export const INITIAL_MEMORIES: Memory[] = [];

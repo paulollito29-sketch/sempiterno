@@ -95,9 +95,15 @@ CREATE TABLE IF NOT EXISTS public.sempiterno_capsules (
 );
 
 -- ------------------------------------------------------------------------------
--- SEGURIDAD: POLÍTICAS RLS (Row Level Security)
--- Permite lectura y escritura con la clave anónima (anon key)
+-- SEGURIDAD: POLÍTICAS RLS (Row Level Security) Y PRIVILEGIOS
 -- ------------------------------------------------------------------------------
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL ROUTINES IN SCHEMA public TO anon, authenticated;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated;
+
 ALTER TABLE public.sempiterno_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sempiterno_memories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sempiterno_plans ENABLE ROW LEVEL SECURITY;
