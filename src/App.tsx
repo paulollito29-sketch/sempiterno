@@ -92,6 +92,16 @@ export function App() {
   // Realtime Bedtime Kisses
   const [kissesData, setKissesData] = useState<KissesData | undefined>(undefined);
   const [incomingKissAlert, setIncomingKissAlert] = useState<{ senderName: string; time: string } | null>(null);
+  const [completedPlanUndo, setCompletedPlanUndo] = useState<{ plan: Plan; prevStatus: PlanStatus } | null>(null);
+
+  // Auto-dismiss undo banner
+  useEffect(() => {
+    if (!completedPlanUndo) return;
+    const timer = setTimeout(() => {
+      setCompletedPlanUndo(null);
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, [completedPlanUndo]);
 
   // Sync dark mode class
   useEffect(() => {
@@ -284,6 +294,7 @@ export function App() {
     if (plan.category === 'Planes en Casa') memCat = 'Plan Casero';
     if (plan.category === 'Aventura') memCat = 'Concierto/Salida';
 
+    const previousStatus = plan.status;
     setPrefillPlanForMemory({
       title: plan.title,
       category: memCat,
@@ -294,6 +305,18 @@ export function App() {
 
     // Mark plan as lived
     handleUpdatePlanStatus(plan.id, '¡Vivido!');
+    fireHeartConfetti();
+
+    // Enable undo safety
+    setCompletedPlanUndo({ plan, prevStatus: previousStatus });
+  };
+
+  const handleUndoCompletePlan = () => {
+    if (!completedPlanUndo) return;
+    handleUpdatePlanStatus(completedPlanUndo.plan.id, completedPlanUndo.prevStatus);
+    setIsMemoryModalOpen(false);
+    setPrefillPlanForMemory(null);
+    setCompletedPlanUndo(null);
   };
 
   // --- PLACE HANDLERS ---
@@ -540,7 +563,13 @@ export function App() {
             className="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-sm w-[92%] bg-butter border-3 border-carbon rounded-2xl p-3.5 shadow-neo-lg flex items-center justify-between gap-3"
           >
             <div className="flex items-center gap-2.5">
-              <span className="text-2xl animate-bounce">💋</span>
+              <motion.span
+                animate={{ scale: [1, 1.25, 1], y: [0, -3, 0] }}
+                transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
+                className="text-2xl inline-block"
+              >
+                💋
+              </motion.span>
               <div>
                 <p className="font-display font-black text-xs text-carbon">
                   ¡{incomingKissAlert.senderName} te mandó un besito! ❤️
@@ -565,6 +594,44 @@ export function App() {
                 type="button"
                 onClick={() => setIncomingKissAlert(null)}
                 className="p-1 rounded-lg border border-carbon hover:bg-carbon/10 transition-colors"
+              >
+                <X className="w-3.5 h-3.5 text-carbon" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Undo Banner for Completed Plan */}
+      <AnimatePresence>
+        {completedPlanUndo && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            className="fixed bottom-24 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-md w-[92%] bg-butter border-3 border-carbon rounded-2xl p-3.5 shadow-neo-lg flex items-center justify-between gap-3"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🎉</span>
+              <p className="font-display font-bold text-xs text-carbon leading-tight">
+                Cita <strong>"{completedPlanUndo.plan.title}"</strong> marcada como vivida.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleUndoCompletePlan}
+                className="neo-btn-primary text-xs py-1 px-3 font-bold"
+              >
+                Deshacer
+              </button>
+              <button
+                type="button"
+                onClick={() => setCompletedPlanUndo(null)}
+                className="p-1 rounded-lg border border-carbon hover:bg-carbon/10 transition-colors"
+                title="Cerrar"
+                aria-label="Cerrar notificación"
               >
                 <X className="w-3.5 h-3.5 text-carbon" />
               </button>

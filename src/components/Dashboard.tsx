@@ -112,6 +112,29 @@ export const Dashboard: React.FC<DashboardProps> = ({
     }
   };
 
+  // Keyboard accelerators (R: shuffle flashback, Escape: close date editor)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeTag = (document.activeElement?.tagName || '').toLowerCase();
+      if (activeTag === 'input' || activeTag === 'textarea') {
+        if (e.key === 'Escape') {
+          setIsEditingStartDate(false);
+        }
+        return;
+      }
+
+      if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        handleShuffleFlashback();
+      } else if (e.key === 'Escape' && isEditingStartDate) {
+        setIsEditingStartDate(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isEditingStartDate, memories, flashbackIndex]);
+
   const currentFlashback = memories[flashbackIndex] || memories[0];
 
   return (
@@ -197,10 +220,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <button
               type="button"
               onClick={() => setIsEditingStartDate(!isEditingStartDate)}
-              className="p-1.5 border-2 border-carbon rounded-lg bg-cream dark:bg-nightSurface text-carbon dark:text-cream hover:bg-rosePastel shadow-neo-sm text-xs font-bold"
+              className="min-w-[36px] min-h-[36px] sm:min-w-[40px] sm:min-h-[40px] p-2 border-2 border-carbon rounded-xl bg-cream dark:bg-nightSurface text-carbon dark:text-cream hover:bg-rosePastel shadow-neo-sm text-xs font-bold flex items-center justify-center transition-colors"
               title="Cambiar fecha de inicio"
+              aria-label="Cambiar fecha de inicio de la relación"
             >
-              <Edit3 className="w-3.5 h-3.5" />
+              <Edit3 className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -217,8 +241,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <input
               type="date"
               value={tempStartDate}
+              max={new Date().toISOString().split('T')[0]}
               onChange={(e) => setTempStartDate(e.target.value)}
               className="neo-input text-xs py-1.5"
+              aria-label="Fecha de inicio de la historia de amor"
             />
             <button type="submit" className="neo-btn-primary text-xs py-1.5 px-3">
               Guardar fecha
@@ -228,13 +254,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
               onClick={() => setIsEditingStartDate(false)}
               className="text-xs font-bold text-carbon/60 dark:text-cream/60 hover:underline"
             >
-              Cancelar
+              Cancelar (Esc)
             </button>
           </form>
         )}
 
         {/* Live Counters Grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-4">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-4" aria-live="polite">
           {[
             { label: 'Años', value: elapsed.years, color: 'bg-rosePastel-light' },
             { label: 'Meses', value: elapsed.months, color: 'bg-butter-light' },
@@ -250,11 +276,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               transition={{ type: "spring", stiffness: 400, damping: 15 }}
               className={`${item.color} dark:bg-nightSurface border-2 border-carbon rounded-2xl p-2.5 sm:p-4 text-center shadow-neo-sm relative cursor-default`}
             >
-              <div
-                className={`font-display text-xl sm:text-4xl font-black text-carbon dark:text-cream ${
-                  item.animate ? 'tabular-nums' : ''
-                }`}
-              >
+              <div className="font-display text-xl sm:text-4xl font-black text-carbon dark:text-cream tabular-nums">
                 {item.value < 10 ? `0${item.value}` : item.value}
               </div>
               <div className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-carbon/70 dark:text-cream/70 mt-0.5 sm:mt-1">
@@ -427,28 +449,47 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <span className="text-xl">📸</span>
-                <h3 className="font-display text-lg sm:text-xl font-black text-carbon dark:text-cream">
-                  Un Recuerdo al Azar
-                </h3>
+                <div>
+                  <h3 className="font-display text-lg sm:text-xl font-black text-carbon dark:text-cream leading-tight">
+                    Un Recuerdo al Azar
+                  </h3>
+                  <span className="text-[10px] text-coral font-bold block sm:hidden">
+                    👉 Desliza la foto para cambiar
+                  </span>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={handleShuffleFlashback}
-                disabled={isFlipping || memories.length <= 1}
-                className="neo-btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
-              >
-                <Shuffle className={`w-3.5 h-3.5 ${isFlipping ? 'animate-spin' : ''}`} />
-                <span>Girar otro</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                <span className="hidden sm:inline-block text-[10px] font-mono bg-carbon/10 dark:bg-cream/10 text-carbon/70 dark:text-cream/70 px-1.5 py-0.5 rounded border border-carbon/20">
+                  [R]
+                </span>
+                <button
+                  type="button"
+                  onClick={handleShuffleFlashback}
+                  disabled={isFlipping || memories.length <= 1}
+                  className="neo-btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
+                >
+                  <Shuffle className={`w-3.5 h-3.5 ${isFlipping ? 'animate-spin' : ''}`} />
+                  <span>Girar otro</span>
+                </button>
+              </div>
             </div>
 
             {currentFlashback ? (
               <motion.div
                 key={currentFlashback.id}
-                initial={{ rotate: -2, scale: 0.96 }}
-                animate={{ rotate: 1, scale: 1 }}
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.4}
+                onDragEnd={(_, info) => {
+                  if (Math.abs(info.offset.x) > 50 || Math.abs(info.velocity.x) > 300) {
+                    handleShuffleFlashback();
+                  }
+                }}
+                initial={{ rotate: -2, scale: 0.96, opacity: 0 }}
+                animate={{ rotate: 1, scale: 1, opacity: 1 }}
+                whileDrag={{ scale: 1.02, rotate: 3, cursor: 'grabbing' }}
                 transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-                className="bg-cream dark:bg-nightSurface border-3 border-carbon rounded-2xl p-4 shadow-neo relative"
+                className="bg-cream dark:bg-nightSurface border-3 border-carbon rounded-2xl p-4 shadow-neo relative cursor-grab active:cursor-grabbing select-none touch-pan-y"
               >
                 {/* Vintage Washi Tape Top Decoration */}
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-6 bg-butter/90 border border-carbon rotate-1 shadow-xs pointer-events-none" />

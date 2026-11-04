@@ -121,10 +121,12 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={onOpenBedtime}
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
+            animate={isNightTime ? { y: [0, -3, 0] } : undefined}
+            transition={isNightTime ? { repeat: Infinity, duration: 2.2, ease: "easeInOut" } : undefined}
             title={isNightTime ? "¡A la camita! (Modo noche activo)" : "Easter egg de buenas noches"}
             className={`p-1.5 sm:p-2 border-2 border-carbon rounded-xl shadow-neo-sm transition-colors ${
               isNightTime
-                ? 'bg-butter text-carbon animate-bounce'
+                ? 'bg-butter text-carbon'
                 : 'bg-white dark:bg-nightCard text-carbon dark:text-cream hover:bg-cream'
             }`}
           >

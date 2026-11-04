@@ -66,7 +66,13 @@ export const BedtimeModal: React.FC<BedtimeModalProps> = ({
           >
             {/* Background stars */}
             <div className="absolute top-3 right-12 text-yellow-400 animate-pulse text-lg">✨</div>
-            <div className="absolute top-10 left-6 text-yellow-300 animate-bounce text-sm">⭐</div>
+            <motion.div
+              animate={{ y: [0, -5, 0], rotate: [0, 15, 0] }}
+              transition={{ repeat: Infinity, duration: 2.6, ease: "easeInOut" }}
+              className="absolute top-10 left-6 text-yellow-300 text-sm"
+            >
+              ⭐
+            </motion.div>
             <div className="absolute bottom-6 right-8 text-yellow-400 opacity-60 text-base">🌙</div>
 
             {/* Close Button */}
