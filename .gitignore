@@ -1,4 +1,10 @@
-# Logs
+# Environment & deployment
+.env
+.env*.local
+.env.*
+.vercel
+vercel 2.json
+
 logs
 *.log
 npm-debug.log*

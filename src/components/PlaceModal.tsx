@@ -90,9 +90,9 @@ export const PlaceModal: React.FC<PlaceModalProps> = ({
       whatWeOrdered: whatWeOrdered.trim() || undefined,
       review: review.trim() || undefined,
       wouldReturn,
-      rating: status === 'Visitado' ? rating : undefined,
+      rating: status === 'Visitado' ? (rating || 5) : undefined,
       priceRange,
-      imageUrl: imageUrl.trim() || SUGGESTED_PHOTOS[0].url,
+      imageUrl: imageUrl.trim() || undefined,
       googleMapsUrl: googleMapsUrl.trim() || undefined,
     };
 
@@ -206,10 +206,13 @@ export const PlaceModal: React.FC<PlaceModalProps> = ({
 
           {/* What We Ordered / Recommended */}
           <div>
-            <label className="block font-bold text-carbon dark:text-cream mb-1">
-              {status === 'Visitado'
-                ? '¿Qué pedimos? (Platos favoritos)'
-                : '¿Qué se nos antoja pedir? (Recomendaciones)'}
+            <label className="block font-bold text-carbon dark:text-cream mb-1 flex items-center justify-between">
+              <span>
+                {status === 'Visitado'
+                  ? '¿Qué pedimos? (Platos favoritos)'
+                  : '¿Qué se nos antoja pedir? (Recomendaciones)'}
+              </span>
+              <span className="text-[10px] text-carbon/50 dark:text-cream/50 font-normal">Opcional</span>
             </label>
             <input
               type="text"
@@ -222,8 +225,9 @@ export const PlaceModal: React.FC<PlaceModalProps> = ({
 
           {/* Review */}
           <div>
-            <label className="block font-bold text-carbon dark:text-cream mb-1">
-              Nuestra reseña corta
+            <label className="block font-bold text-carbon dark:text-cream mb-1 flex items-center justify-between">
+              <span>Nuestra reseña corta</span>
+              <span className="text-[10px] text-carbon/50 dark:text-cream/50 font-normal">Opcional</span>
             </label>
             <textarea
               rows={2}
@@ -273,14 +277,29 @@ export const PlaceModal: React.FC<PlaceModalProps> = ({
 
           {/* Image URL & Presets */}
           <div>
-            <label className="block font-bold text-carbon dark:text-cream mb-1">
-              Foto o portada del lugar (URL)
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="font-bold text-carbon dark:text-cream flex items-center gap-1">
+                <Image className="w-4 h-4 text-coral" />
+                <span>Foto o portada del lugar</span>
+              </label>
+              <div className="flex items-center gap-2">
+                {imageUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setImageUrl('')}
+                    className="text-[10px] text-coral hover:underline font-bold"
+                  >
+                    Quitar foto
+                  </button>
+                )}
+                <span className="text-[10px] text-carbon/50 dark:text-cream/50 font-normal">Opcional</span>
+              </div>
+            </div>
             <input
               type="url"
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://..."
+              placeholder="https://... (puedes dejarlo vacío)"
               className="neo-input w-full text-xs"
             />
             <div className="flex flex-wrap gap-1 mt-1.5 items-center">

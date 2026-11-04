@@ -523,25 +523,35 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   />
                 </div>
 
-                {/* Dual Perspective Snippet */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] bg-white dark:bg-nightCard border border-carbon rounded-xl p-2.5 mt-2">
-                  <div className="border-b sm:border-b-0 sm:border-r border-carbon/20 pb-2 sm:pb-0 sm:pr-2">
-                    <span className="font-bold text-coral flex items-center gap-1 mb-0.5">
-                      <MouseEarsIcon type="gigio" size={14} /> Gigio:
-                    </span>
-                    <p className="line-clamp-2 text-carbon/80 dark:text-cream/80 italic">
-                      "{currentFlashback.perspectiveGigio}"
-                    </p>
+                {/* Dual Perspective Snippet (if either exists) */}
+                {(currentFlashback.perspectiveGigio || currentFlashback.perspectiveRosita) ? (
+                  <div className={`grid grid-cols-1 ${currentFlashback.perspectiveGigio && currentFlashback.perspectiveRosita ? 'sm:grid-cols-2' : ''} gap-2 text-[11px] bg-white dark:bg-nightCard border border-carbon rounded-xl p-2.5 mt-2`}>
+                    {currentFlashback.perspectiveGigio && (
+                      <div className={currentFlashback.perspectiveRosita ? "border-b sm:border-b-0 sm:border-r border-carbon/20 pb-2 sm:pb-0 sm:pr-2" : ""}>
+                        <span className="font-bold text-coral flex items-center gap-1 mb-0.5">
+                          <MouseEarsIcon type="gigio" size={14} /> Gigio:
+                        </span>
+                        <p className="line-clamp-2 text-carbon/80 dark:text-cream/80 italic">
+                          "{currentFlashback.perspectiveGigio}"
+                        </p>
+                      </div>
+                    )}
+                    {currentFlashback.perspectiveRosita && (
+                      <div className={currentFlashback.perspectiveGigio ? "pt-2 sm:pt-0 sm:pl-2" : ""}>
+                        <span className="font-bold text-coral flex items-center gap-1 mb-0.5">
+                          <MouseEarsIcon type="rosita" size={14} /> Rosita:
+                        </span>
+                        <p className="line-clamp-2 text-carbon/80 dark:text-cream/80 italic">
+                          "{currentFlashback.perspectiveRosita}"
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  <div className="pt-2 sm:pt-0 sm:pl-2">
-                    <span className="font-bold text-coral flex items-center gap-1 mb-0.5">
-                      <MouseEarsIcon type="rosita" size={14} /> Rosita:
-                    </span>
-                    <p className="line-clamp-2 text-carbon/80 dark:text-cream/80 italic">
-                      "{currentFlashback.perspectiveRosita}"
-                    </p>
+                ) : (
+                  <div className="bg-white/70 dark:bg-nightCard/70 border border-carbon/20 rounded-xl p-2 mt-2 text-center text-[11px] text-carbon/60 dark:text-cream/60 italic">
+                    📍 {currentFlashback.location || 'Un momento inolvidable'}
                   </div>
-                </div>
+                )}
               </motion.div>
             ) : (
               <div className="bg-cream dark:bg-nightSurface border-2 border-dashed border-carbon rounded-2xl p-8 text-center">

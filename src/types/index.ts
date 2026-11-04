@@ -12,8 +12,8 @@ export interface Memory {
   category: MemoryCategory;
   photos: string[];
   location: string;
-  perspectiveGigio: string; // Lo que sintió / versión de él
-  perspectiveRosita: string; // Lo que sintió / versión de ella
+  perspectiveGigio?: string; // Lo que sintió / versión de él (opcional)
+  perspectiveRosita?: string; // Lo que sintió / versión de ella (opcional)
   rating: number; // 1 to 5
   songTitle?: string;
   songUrl?: string; // Spotify / YouTube link

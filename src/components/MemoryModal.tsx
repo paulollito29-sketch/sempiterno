@@ -96,6 +96,7 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
           updated.push(finalUrl);
         }
         setPhotoUrls(updated);
+        setUploadError(null);
         fireHeartConfetti();
       }
     } catch (err: any) {
@@ -113,12 +114,13 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
       setCategory(memoryToEdit.category);
       setLocation(memoryToEdit.location);
       setRating(memoryToEdit.rating);
-      setPerspectiveGigio(memoryToEdit.perspectiveGigio);
-      setPerspectiveRosita(memoryToEdit.perspectiveRosita);
+      setPerspectiveGigio(memoryToEdit.perspectiveGigio || '');
+      setPerspectiveRosita(memoryToEdit.perspectiveRosita || '');
       setSongTitle(memoryToEdit.songTitle || '');
       setSongUrl(memoryToEdit.songUrl || '');
       setPhotoUrls(memoryToEdit.photos.length > 0 ? memoryToEdit.photos : ['']);
       setTagsInput(memoryToEdit.tags ? memoryToEdit.tags.join(', ') : '');
+      setUploadError(null);
     } else {
       setTitle(prefillPlanTitle || '');
       setDate(new Date().toISOString().split('T')[0]);
@@ -131,6 +133,7 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
       setSongUrl('');
       setPhotoUrls(['']);
       setTagsInput('');
+      setUploadError(null);
     }
   }, [memoryToEdit, prefillPlanTitle, prefillCategory, prefillLocation, isOpen]);
 
@@ -155,7 +158,8 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
 
     const cleanPhotos = photoUrls.map((p) => p.trim()).filter(Boolean);
     if (cleanPhotos.length === 0) {
-      cleanPhotos.push(SUGGESTED_PHOTOS[0].url);
+      setUploadError('Por favor añade al menos una foto para guardar el recuerdo (puedes subirla, pegar un enlace o elegir una sugerida).');
+      return;
     }
 
     const tags = tagsInput
@@ -170,8 +174,8 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
       category,
       location: location.trim() || 'Nuestro lugar especial',
       photos: cleanPhotos,
-      perspectiveGigio: perspectiveGigio.trim() || 'Un momento inolvidable juntos.',
-      perspectiveRosita: perspectiveRosita.trim() || 'Atesoro este recuerdo con todo mi amor.',
+      perspectiveGigio: perspectiveGigio.trim() || undefined,
+      perspectiveRosita: perspectiveRosita.trim() || undefined,
       rating,
       songTitle: songTitle.trim() || undefined,
       songUrl: songUrl.trim() || undefined,
@@ -288,36 +292,45 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
 
           {/* DOBLE PERSPECTIVA */}
           <div className="bg-white dark:bg-nightSurface border-2 border-carbon rounded-2xl p-4 shadow-neo-sm space-y-3">
-            <div className="flex items-center gap-1.5 text-coral font-bold">
-              <span>👥</span>
-              <span>Doble Perspectiva (Lo que sintió cada uno)</span>
+            <div className="flex items-center justify-between text-coral font-bold">
+              <div className="flex items-center gap-1.5">
+                <span>👥</span>
+                <span>Doble Perspectiva (Lo que sintió cada uno)</span>
+              </div>
+              <span className="text-[11px] text-carbon/50 dark:text-cream/50 font-normal">Opcional</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="font-bold text-carbon dark:text-cream flex items-center gap-1.5 mb-1 text-xs">
-                  <MouseEarsIcon type="gigio" size={16} />
-                  <span>Lo que sintió Gigio ({settings.partner1.name}):</span>
+                <label className="font-bold text-carbon dark:text-cream flex items-center justify-between gap-1.5 mb-1 text-xs">
+                  <span className="flex items-center gap-1.5">
+                    <MouseEarsIcon type="gigio" size={16} />
+                    <span>Lo que sintió Gigio ({settings.partner1.name}):</span>
+                  </span>
+                  <span className="text-[10px] text-carbon/40 dark:text-cream/40 font-normal">Opcional</span>
                 </label>
                 <textarea
                   rows={3}
                   value={perspectiveGigio}
                   onChange={(e) => setPerspectiveGigio(e.target.value)}
-                  placeholder="Lo que más me gustó, cómo me sentí mirándote..."
+                  placeholder="Lo que más me gustó, cómo me sentí mirándote... (puedes dejarlo vacío)"
                   className="neo-input w-full text-xs"
                 />
               </div>
 
               <div>
-                <label className="font-bold text-carbon dark:text-cream flex items-center gap-1.5 mb-1 text-xs">
-                  <MouseEarsIcon type="rosita" size={16} />
-                  <span>Lo que sintió Rosita ({settings.partner2.name}):</span>
+                <label className="font-bold text-carbon dark:text-cream flex items-center justify-between gap-1.5 mb-1 text-xs">
+                  <span className="flex items-center gap-1.5">
+                    <MouseEarsIcon type="rosita" size={16} />
+                    <span>Lo que sintió Rosita ({settings.partner2.name}):</span>
+                  </span>
+                  <span className="text-[10px] text-carbon/40 dark:text-cream/40 font-normal">Opcional</span>
                 </label>
                 <textarea
                   rows={3}
                   value={perspectiveRosita}
                   onChange={(e) => setPerspectiveRosita(e.target.value)}
-                  placeholder="Mi recuerdo favorito de ese día, lo que pensé..."
+                  placeholder="Mi recuerdo favorito de ese día, lo que pensé... (puedes dejarlo vacío)"
                   className="neo-input w-full text-xs"
                 />
               </div>
@@ -327,9 +340,12 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
           {/* Photos URL list & Presets */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="font-bold text-carbon dark:text-cream flex items-center gap-1">
+              <label className="font-bold text-carbon dark:text-cream flex items-center gap-1.5 flex-wrap">
                 <Image className="w-4 h-4 text-coral" />
-                <span>Fotos del Recuerdo</span>
+                <span>Fotos del Recuerdo *</span>
+                <span className="text-[11px] font-bold text-coral bg-rosePastel-light px-2 py-0.5 rounded-full border border-carbon/20">
+                  Al menos una requerida
+                </span>
               </label>
 
               <div className="flex items-center gap-2">
@@ -338,14 +354,14 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploadingPhoto}
                   className="neo-btn-rose text-[11px] py-1 px-2.5 flex items-center gap-1"
-                  title="Subir foto directo a Google Drive"
+                  title="Subir foto desde tu dispositivo a Supabase"
                 >
                   {isUploadingPhoto ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
                   ) : (
                     <Upload className="w-3 h-3" />
                   )}
-                  <span>{isUploadingPhoto ? 'Subiendo...' : 'Subir foto (Drive)'}</span>
+                  <span>{isUploadingPhoto ? 'Subiendo...' : 'Subir foto'}</span>
                 </button>
                 <input
                   ref={fileInputRef}
@@ -366,7 +382,7 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
             </div>
 
             {uploadError && (
-              <p className="text-[11px] font-bold text-red-500 mb-2">
+              <p className="text-[11px] font-bold text-red-600 bg-red-50 dark:bg-red-950/40 p-2 rounded-xl border border-red-300 mb-2">
                 ⚠️ {uploadError}
               </p>
             )}
@@ -377,7 +393,10 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                   <input
                     type="url"
                     value={url}
-                    onChange={(e) => handlePhotoChange(idx, e.target.value)}
+                    onChange={(e) => {
+                      handlePhotoChange(idx, e.target.value);
+                      if (uploadError) setUploadError(null);
+                    }}
                     placeholder="https://images.unsplash.com/... o enlace de tu foto"
                     className="neo-input flex-1 text-xs"
                   />
@@ -411,6 +430,7 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                       updated.push(preset.url);
                     }
                     setPhotoUrls(updated);
+                    setUploadError(null);
                   }}
                   className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-carbon bg-butter-light hover:bg-butter text-carbon"
                 >
@@ -423,9 +443,12 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
           {/* Song & Tags */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="font-bold text-carbon dark:text-cream flex items-center gap-1 mb-1">
-                <Music className="w-4 h-4 text-coral" />
-                <span>La Canción de ese día</span>
+              <label className="font-bold text-carbon dark:text-cream flex items-center justify-between gap-1 mb-1">
+                <span className="flex items-center gap-1">
+                  <Music className="w-4 h-4 text-coral" />
+                  <span>Canción de ese día</span>
+                </span>
+                <span className="text-[10px] text-carbon/50 dark:text-cream/50 font-normal">Opcional</span>
               </label>
               <input
                 type="text"
@@ -436,8 +459,9 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
               />
             </div>
             <div>
-              <label className="font-bold text-carbon dark:text-cream mb-1 block">
-                Etiquetas (separadas por comas)
+              <label className="font-bold text-carbon dark:text-cream mb-1 flex items-center justify-between">
+                <span>Etiquetas</span>
+                <span className="text-[10px] text-carbon/50 dark:text-cream/50 font-normal">Opcional</span>
               </label>
               <input
                 type="text"

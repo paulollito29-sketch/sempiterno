@@ -64,8 +64,8 @@ export const MemoriesView: React.FC<MemoriesViewProps> = ({
       const matchesSearch =
         mem.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         mem.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        mem.perspectiveGigio.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        mem.perspectiveRosita.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (mem.perspectiveGigio && mem.perspectiveGigio.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (mem.perspectiveRosita && mem.perspectiveRosita.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (mem.tags && mem.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())));
       return matchesCategory && matchesSearch;
     })
@@ -224,14 +224,20 @@ export const MemoriesView: React.FC<MemoriesViewProps> = ({
                 </div>
 
                 {/* Dual perspectives previews */}
-                <div className="space-y-1.5 bg-cream/70 dark:bg-nightSurface/70 border border-carbon rounded-xl p-2.5 text-xs text-carbon/80 dark:text-cream/80">
-                  <p className="line-clamp-1 italic">
-                    <strong className="text-coral">Gigio:</strong> "{mem.perspectiveGigio}"
-                  </p>
-                  <p className="line-clamp-1 italic">
-                    <strong className="text-coral">Rosita:</strong> "{mem.perspectiveRosita}"
-                  </p>
-                </div>
+                {(mem.perspectiveGigio || mem.perspectiveRosita) && (
+                  <div className="space-y-1.5 bg-cream/70 dark:bg-nightSurface/70 border border-carbon rounded-xl p-2.5 text-xs text-carbon/80 dark:text-cream/80">
+                    {mem.perspectiveGigio && (
+                      <p className="line-clamp-1 italic">
+                        <strong className="text-coral">Gigio:</strong> "{mem.perspectiveGigio}"
+                      </p>
+                    )}
+                    {mem.perspectiveRosita && (
+                      <p className="line-clamp-1 italic">
+                        <strong className="text-coral">Rosita:</strong> "{mem.perspectiveRosita}"
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Card Footer Actions */}
@@ -340,24 +346,30 @@ export const MemoriesView: React.FC<MemoriesViewProps> = ({
                     </div>
 
                     {/* Dual Perspectives */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-cream dark:bg-nightSurface border border-carbon rounded-xl p-3">
-                      <div>
-                        <span className="font-bold text-coral flex items-center gap-1 mb-1">
-                          <MouseEarsIcon type="gigio" size={14} /> Gigio:
-                        </span>
-                        <p className="italic text-carbon/80 dark:text-cream/80">
-                          "{mem.perspectiveGigio}"
-                        </p>
+                    {(mem.perspectiveGigio || mem.perspectiveRosita) && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-cream dark:bg-nightSurface border border-carbon rounded-xl p-3">
+                        {mem.perspectiveGigio && (
+                          <div>
+                            <span className="font-bold text-coral flex items-center gap-1 mb-1">
+                              <MouseEarsIcon type="gigio" size={14} /> Gigio:
+                            </span>
+                            <p className="italic text-carbon/80 dark:text-cream/80">
+                              "{mem.perspectiveGigio}"
+                            </p>
+                          </div>
+                        )}
+                        {mem.perspectiveRosita && (
+                          <div>
+                            <span className="font-bold text-coral flex items-center gap-1 mb-1">
+                              <MouseEarsIcon type="rosita" size={14} /> Rosita:
+                            </span>
+                            <p className="italic text-carbon/80 dark:text-cream/80">
+                              "{mem.perspectiveRosita}"
+                            </p>
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <span className="font-bold text-coral flex items-center gap-1 mb-1">
-                          <MouseEarsIcon type="rosita" size={14} /> Rosita:
-                        </span>
-                        <p className="italic text-carbon/80 dark:text-cream/80">
-                          "{mem.perspectiveRosita}"
-                        </p>
-                      </div>
-                    </div>
+                    )}
 
                     <div className="flex items-center justify-between pt-2">
                       <button
@@ -485,33 +497,39 @@ export const MemoriesView: React.FC<MemoriesViewProps> = ({
               </div>
 
               {/* DOBLE PERSPECTIVA BOXES */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                {/* Gigio's Box */}
-                <div className="bg-white dark:bg-nightSurface border-2 border-carbon rounded-2xl p-4 shadow-neo-sm relative">
-                  <div className="flex items-center gap-2 mb-2 pb-2 border-b border-carbon/10">
-                    <MouseEarsIcon type="gigio" size={22} />
-                    <span className="font-bold text-sm text-carbon dark:text-cream">
-                      Lo que sintió {settings.partner1.nickname} ({settings.partner1.name})
-                    </span>
-                  </div>
-                  <p className="text-xs sm:text-sm text-carbon/80 dark:text-cream/80 italic leading-relaxed">
-                    "{inspectingMemory.perspectiveGigio}"
-                  </p>
-                </div>
+              {(inspectingMemory.perspectiveGigio || inspectingMemory.perspectiveRosita) && (
+                <div className={`grid grid-cols-1 ${inspectingMemory.perspectiveGigio && inspectingMemory.perspectiveRosita ? 'md:grid-cols-2' : ''} gap-4 mb-6`}>
+                  {/* Gigio's Box */}
+                  {inspectingMemory.perspectiveGigio && (
+                    <div className="bg-white dark:bg-nightSurface border-2 border-carbon rounded-2xl p-4 shadow-neo-sm relative">
+                      <div className="flex items-center gap-2 mb-2 pb-2 border-b border-carbon/10">
+                        <MouseEarsIcon type="gigio" size={22} />
+                        <span className="font-bold text-sm text-carbon dark:text-cream">
+                          Lo que sintió {settings.partner1.nickname} ({settings.partner1.name})
+                        </span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-carbon/80 dark:text-cream/80 italic leading-relaxed">
+                        "{inspectingMemory.perspectiveGigio}"
+                      </p>
+                    </div>
+                  )}
 
-                {/* Rosita's Box */}
-                <div className="bg-white dark:bg-nightSurface border-2 border-carbon rounded-2xl p-4 shadow-neo-sm relative">
-                  <div className="flex items-center gap-2 mb-2 pb-2 border-b border-carbon/10">
-                    <MouseEarsIcon type="rosita" size={22} />
-                    <span className="font-bold text-sm text-carbon dark:text-cream">
-                      Lo que sintió {settings.partner2.nickname} ({settings.partner2.name})
-                    </span>
-                  </div>
-                  <p className="text-xs sm:text-sm text-carbon/80 dark:text-cream/80 italic leading-relaxed">
-                    "{inspectingMemory.perspectiveRosita}"
-                  </p>
+                  {/* Rosita's Box */}
+                  {inspectingMemory.perspectiveRosita && (
+                    <div className="bg-white dark:bg-nightSurface border-2 border-carbon rounded-2xl p-4 shadow-neo-sm relative">
+                      <div className="flex items-center gap-2 mb-2 pb-2 border-b border-carbon/10">
+                        <MouseEarsIcon type="rosita" size={22} />
+                        <span className="font-bold text-sm text-carbon dark:text-cream">
+                          Lo que sintió {settings.partner2.nickname} ({settings.partner2.name})
+                        </span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-carbon/80 dark:text-cream/80 italic leading-relaxed">
+                        "{inspectingMemory.perspectiveRosita}"
+                      </p>
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
 
               {/* Song Player / Link & Tags */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-nightSurface border-2 border-carbon rounded-2xl p-4 shadow-neo-sm">

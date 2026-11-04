@@ -62,30 +62,29 @@
 * **Desbloqueo Emocionante:** Al llegar la fecha (o con la llave secreta), la carta se abre con animación y confeti mostrando el texto manuscrito romántico.
 
 ### 7. Ajustes, Personalización y Respaldo de Datos
-* Personalización de nombres y apodos de ambos.
+* Personalización de nombres y apodos de ambos (Paulo / Gigio 🐭 y Alexandra / Rosita 🎀).
 * Modo Oscuro / Modo Crema Claro instantáneo.
-* **Sincronización en la Nube con Google Sheets & Google Drive:**
-  * Base de datos en tiempo real gratuita en una hoja de Google Sheets privada.
-  * Subida automática de fotos de recuerdos a una carpeta compartida en **Google Drive** (`Sempiterno Fotos 💖`).
-  * Botón interactivo de *Probar Conexión* y *Sincronizar ahora* en la app.
+* **Sincronización en la Nube con Supabase:**
+  * Base de datos PostgreSQL en tiempo real gratuita con WebSockets.
+  * Sincronización instantánea entre dispositivos para recuerdos, planes, rincones, cápsulas y besitos en vivo.
+  * Almacenamiento de fotos en la nube mediante Supabase Storage.
 * **PWA (Progressive Web App):** Instalable en iPhone y Android a pantalla completa ("Agregar a inicio"), con icono de Topo Gigio y Rosita.
 * **Exportación e Importación JSON:** Copia de seguridad local para no perder nunca las memorias.
 * Botón de restauración de datos de prueba románticos preconfigurados.
 
 ---
 
-## ☁️ Conexión con Google Sheets y Google Drive (3 minutos)
+## ☁️ Conexión con Supabase (2 minutos)
 
-1. Abre [Google Sheets](https://sheets.new) y crea una hoja en blanco (llámala por ejemplo `Sempiterno BD`).
-2. En el menú superior haz clic en: **Extensiones > Apps Script**.
-3. Borra el código de ejemplo y pega todo el contenido del archivo [`google-apps-script.js`](./google-apps-script.js).
-4. Haz clic en el botón azul superior **Implementar > Nueva implementación**.
-5. En el engranaje elige **Aplicación web**:
-   - Descripción: `Sempiterno API v1`
-   - Ejecutar como: `Yo`
-   - Quién tiene acceso: `Cualquier persona` (*Anyone*)
-6. Haz clic en **Implementar**, concede los permisos con tu cuenta de Google y copia la URL terminada en `/exec`.
-7. En Sempiterno, abre el icono de **Ajustes ⚙️**, pega la URL en el campo de Google Apps Script y haz clic en **Probar**. ¡Listo! Ya tienen su base de datos privada en vivo.
+1. Crea tu proyecto en [Supabase](https://supabase.com).
+2. Ve al **SQL Editor** en Supabase y ejecuta el script [`supabase-schema.sql`](./supabase-schema.sql).
+3. Obtén tu `Project URL` y `Anon Key` desde **Project Settings > API**.
+4. Configura las variables en tu archivo `.env` o en los ajustes de Vercel:
+   ```env
+   VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
+   VITE_SUPABASE_ANON_KEY=tu-anon-key-aqui
+   ```
+5. ¡Listo! La app sincronizará en tiempo real todos los cambios de forma automática.
 
 ---
 

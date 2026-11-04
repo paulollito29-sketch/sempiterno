@@ -153,12 +153,24 @@ export const PlacesView: React.FC<PlacesViewProps> = ({
           >
             <div>
               {/* Photo & Status Badge */}
-              <div className="w-full h-44 rounded-xl overflow-hidden border-2 border-carbon mb-3 relative bg-carbon/10">
-                <img
-                  src={place.imageUrl || 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80'}
-                  alt={place.name}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
+              <div className="w-full h-44 rounded-xl overflow-hidden border-2 border-carbon mb-3 relative bg-gradient-to-br from-cream via-butter-light to-rosePastel-light dark:from-nightSurface dark:to-night">
+                {place.imageUrl ? (
+                  <img
+                    src={place.imageUrl}
+                    alt={place.name}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center">
+                    <span className="text-4xl mb-1">📍</span>
+                    <span className="font-display font-black text-sm text-carbon dark:text-cream line-clamp-1">
+                      {place.name}
+                    </span>
+                    <span className="text-[11px] font-semibold text-carbon/60 dark:text-cream/60">
+                      {place.zone || 'Rincón especial'}
+                    </span>
+                  </div>
+                )}
                 <div className="absolute top-2.5 left-2.5">
                   <span
                     className={`neo-badge text-[10px] font-black ${
