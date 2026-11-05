@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Calendar, 
@@ -9,12 +9,14 @@ import {
   Search, 
   Plus, 
   ChevronRight, 
+  ChevronLeft,
   Heart, 
   Edit2, 
   Trash2, 
   ExternalLink,
   X,
-  Sparkles
+  Sparkles,
+  ZoomIn
 } from 'lucide-react';
 import { Memory, MemoryCategory, CoupleSettings } from '../types';
 import { RatingDisplay } from './RatingDisplay';
@@ -56,6 +58,31 @@ export const MemoriesView: React.FC<MemoriesViewProps> = ({
     }
     return null;
   });
+  const [lightboxPhotoIndex, setLightboxPhotoIndex] = useState<number | null>(null);
+
+  // Keyboard navigation for image lightbox (Arrows & Escape)
+  useEffect(() => {
+    if (lightboxPhotoIndex === null || !inspectingMemory) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setLightboxPhotoIndex(null);
+      } else if (e.key === 'ArrowRight') {
+        setLightboxPhotoIndex((prev) =>
+          prev !== null ? (prev + 1) % inspectingMemory.photos.length : 0
+        );
+      } else if (e.key === 'ArrowLeft') {
+        setLightboxPhotoIndex((prev) =>
+          prev !== null
+            ? (prev - 1 + inspectingMemory.photos.length) % inspectingMemory.photos.length
+            : 0
+        );
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxPhotoIndex, inspectingMemory]);
 
   // Filter memories
   const filteredMemories = memories
@@ -481,18 +508,32 @@ export const MemoriesView: React.FC<MemoriesViewProps> = ({
               {/* Photo Collage / Gallery */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
                 {inspectingMemory.photos.map((photo, pIdx) => (
-                  <div
+                  <motion.div
                     key={pIdx}
-                    className={`rounded-2xl overflow-hidden border-2 border-carbon shadow-neo-sm bg-carbon/5 ${
+                    onClick={() => setLightboxPhotoIndex(pIdx)}
+                    whileHover={{ scale: 1.015 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                    className={`group relative rounded-2xl overflow-hidden border-2 border-carbon shadow-neo-sm bg-carbon/5 cursor-zoom-in hover:shadow-neo transition-[box-shadow] ${
                       inspectingMemory.photos.length === 1 ? 'sm:col-span-2 max-h-80' : 'h-52'
                     }`}
+                    title="Toca para ver en grande"
                   >
                     <img
                       src={photo}
                       alt={`${inspectingMemory.title} ${pIdx + 1}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
-                  </div>
+                    <div className="absolute inset-0 bg-carbon/0 group-hover:bg-carbon/25 transition-colors flex items-center justify-center pointer-events-none">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/95 dark:bg-nightCard/95 text-carbon dark:text-cream text-xs font-bold px-3 py-1.5 rounded-full border-2 border-carbon shadow-neo-sm flex items-center gap-1.5">
+                        <ZoomIn className="w-3.5 h-3.5 text-coral" />
+                        <span>Ver en grande</span>
+                      </div>
+                    </div>
+                    <div className="sm:hidden absolute bottom-2 right-2 bg-carbon/85 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-white/20">
+                      <ZoomIn className="w-3 h-3" /> Ver en grande
+                    </div>
+                  </motion.div>
                 ))}
               </div>
 
@@ -579,7 +620,10 @@ export const MemoriesView: React.FC<MemoriesViewProps> = ({
               <div className="mt-6 pt-4 border-t-2 border-carbon/20 flex items-center justify-between">
                 <button
                   type="button"
-                  onClick={() => setInspectingMemory(null)}
+                  onClick={() => {
+                    setInspectingMemory(null);
+                    setLightboxPhotoIndex(null);
+                  }}
                   className="neo-btn-white text-xs py-2 px-4"
                 >
                   Cerrar
@@ -590,6 +634,7 @@ export const MemoriesView: React.FC<MemoriesViewProps> = ({
                     onClick={() => {
                       const toEdit = inspectingMemory;
                       setInspectingMemory(null);
+                      setLightboxPhotoIndex(null);
                       onEditMemory(toEdit);
                     }}
                     className="neo-btn-secondary text-xs py-2 px-3 flex items-center gap-1"
@@ -603,6 +648,7 @@ export const MemoriesView: React.FC<MemoriesViewProps> = ({
                       if (confirm(`¿Eliminar este recuerdo?`)) {
                         onDeleteMemory(inspectingMemory.id);
                         setInspectingMemory(null);
+                        setLightboxPhotoIndex(null);
                       }
                     }}
                     className="neo-btn-rose text-xs py-2 px-3 flex items-center gap-1"
@@ -614,6 +660,144 @@ export const MemoriesView: React.FC<MemoriesViewProps> = ({
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* FULLSCREEN IMAGE LIGHTBOX VIEWER */}
+      <AnimatePresence>
+        {lightboxPhotoIndex !== null && inspectingMemory && inspectingMemory.photos[lightboxPhotoIndex] && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="fixed inset-0 z-[70] bg-carbon/95 backdrop-blur-md flex flex-col justify-between p-3 sm:p-6 select-none"
+            onClick={() => setLightboxPhotoIndex(null)}
+          >
+            {/* Top Bar: Title, Counter & Close Button */}
+            <div 
+              className="w-full max-w-5xl mx-auto flex items-center justify-between gap-3 text-white z-10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-2 min-w-0 pr-2">
+                <span className="neo-badge bg-rosePastel text-carbon text-[11px] font-bold shrink-0">
+                  {inspectingMemory.category}
+                </span>
+                <h3 className="font-display font-bold text-sm sm:text-base text-cream truncate">
+                  {inspectingMemory.title}
+                </h3>
+              </div>
+
+              <div className="flex items-center gap-2.5 shrink-0">
+                {inspectingMemory.photos.length > 1 && (
+                  <span className="text-xs font-bold bg-white/20 text-cream px-2.5 py-1 rounded-full border border-white/20">
+                    {lightboxPhotoIndex + 1} / {inspectingMemory.photos.length}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setLightboxPhotoIndex(null)}
+                  className="p-2 bg-white/20 hover:bg-coral text-white rounded-full border border-white/30 shadow-neo-sm transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center"
+                  title="Cerrar visor en grande (Esc)"
+                  aria-label="Cerrar visor"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Center Area: Left Arrow, Main Image with swipe/drag, Right Arrow */}
+            <div 
+              className="flex-1 w-full max-w-5xl mx-auto flex items-center justify-between gap-2 sm:gap-4 my-auto relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Previous button */}
+              {inspectingMemory.photos.length > 1 ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setLightboxPhotoIndex(
+                      (prev) => (prev! - 1 + inspectingMemory.photos.length) % inspectingMemory.photos.length
+                    )
+                  }
+                  className="p-2 sm:p-3 bg-white/20 hover:bg-coral text-white rounded-full border border-white/30 shadow-neo-sm transition-colors shrink-0 z-10 min-w-[42px] min-h-[42px] flex items-center justify-center active:scale-95"
+                  title="Foto anterior (←)"
+                  aria-label="Foto anterior"
+                >
+                  <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+                </button>
+              ) : (
+                <div className="w-8 sm:w-10" />
+              )}
+
+              {/* Main Image with Smooth Transition and Touch Drag Gesture for Mobile */}
+              <div className="flex-1 flex items-center justify-center h-full max-h-[76vh] overflow-hidden relative">
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={lightboxPhotoIndex}
+                    src={inspectingMemory.photos[lightboxPhotoIndex]}
+                    alt={`${inspectingMemory.title} grande`}
+                    initial={{ scale: 0.94, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.94, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                    drag={inspectingMemory.photos.length > 1 ? "x" : false}
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.4}
+                    onDragEnd={(_, info) => {
+                      if (info.offset.x > 50 || info.velocity.x > 250) {
+                        setLightboxPhotoIndex(
+                          (prev) => (prev! - 1 + inspectingMemory.photos.length) % inspectingMemory.photos.length
+                        );
+                      } else if (info.offset.x < -50 || info.velocity.x < -250) {
+                        setLightboxPhotoIndex((prev) => (prev! + 1) % inspectingMemory.photos.length);
+                      }
+                    }}
+                    className="max-h-[70vh] sm:max-h-[76vh] max-w-full object-contain rounded-2xl border-2 sm:border-3 border-white/30 shadow-2xl cursor-grab active:cursor-grabbing touch-pan-y"
+                  />
+                </AnimatePresence>
+              </div>
+
+              {/* Next button */}
+              {inspectingMemory.photos.length > 1 ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setLightboxPhotoIndex((prev) => (prev! + 1) % inspectingMemory.photos.length)
+                  }
+                  className="p-2 sm:p-3 bg-white/20 hover:bg-coral text-white rounded-full border border-white/30 shadow-neo-sm transition-colors shrink-0 z-10 min-w-[42px] min-h-[42px] flex items-center justify-center active:scale-95"
+                  title="Siguiente foto (→)"
+                  aria-label="Siguiente foto"
+                >
+                  <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+                </button>
+              ) : (
+                <div className="w-8 sm:w-10" />
+              )}
+            </div>
+
+            {/* Bottom Bar: Thumbnails preview if multiple */}
+            <div 
+              className="w-full max-w-xl mx-auto flex items-center justify-center gap-2 overflow-x-auto py-2 z-10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {inspectingMemory.photos.length > 1 &&
+                inspectingMemory.photos.map((ph, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setLightboxPhotoIndex(idx)}
+                    className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${
+                      lightboxPhotoIndex === idx
+                        ? 'border-coral ring-2 ring-coral scale-105 shadow-neo-sm opacity-100'
+                        : 'border-white/30 opacity-60 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={ph} alt={`Miniatura ${idx + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
