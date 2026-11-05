@@ -73,9 +73,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 key={tab.id}
                 type="button"
                 onClick={() => onSelectTab(tab.id)}
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.94 }}
-                className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border-2 transition-colors ${
+                whileHover={{ scale: 1.04, y: -1 }}
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border-2 transition-colors duration-150 ${
                   isActive
                     ? 'bg-coral text-white border-carbon shadow-neo'
                     : 'bg-transparent text-carbon dark:text-cream border-transparent hover:border-carbon/30 hover:bg-cream dark:hover:bg-nightSurface'
@@ -85,8 +86,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span>{tab.label}</span>
                 {tab.badge && tab.badge > 0 ? (
                   <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
+                    initial={{ scale: 0.85, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
                     className={`ml-1 text-[10px] font-black px-1.5 py-0.5 rounded-full border border-carbon ${
                       isActive ? 'bg-butter text-carbon' : 'bg-coral text-white'
                     }`}
@@ -100,9 +102,9 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </nav>
 
-      {/* Mobile Floating Bottom Bar */}
-      <div className="fixed bottom-3 left-0 right-0 z-40 px-2 sm:px-3 md:hidden pointer-events-none">
-        <nav className="max-w-md mx-auto pointer-events-auto bg-white/95 dark:bg-nightCard/95 backdrop-blur-md border-3 border-carbon rounded-2xl p-1 shadow-neo-lg flex items-center justify-around">
+      {/* Mobile Floating Bottom Bar with Safe-Area clearance */}
+      <div className="fixed bottom-[max(0.75rem,calc(env(safe-area-inset-bottom,0px)+0.5rem))] left-0 right-0 z-40 px-2 sm:px-3 md:hidden pointer-events-none">
+        <nav className="max-w-md mx-auto pointer-events-auto bg-white/95 dark:bg-nightCard/95 backdrop-blur-xl border-3 border-carbon rounded-2xl p-1 shadow-neo-lg flex items-center justify-around">
           {tabs.map((tab) => {
             const isActive = currentTab === tab.id;
             return (
@@ -110,26 +112,28 @@ export const Navbar: React.FC<NavbarProps> = ({
                 key={tab.id}
                 type="button"
                 onClick={() => onSelectTab(tab.id)}
-                whileTap={{ scale: 0.88 }}
-                className={`relative flex-1 flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-colors ${
+                whileTap={{ scale: 0.92 }}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                className={`relative flex-1 min-h-[46px] flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-colors duration-150 ${
                   isActive
                     ? 'bg-coral text-white border-2 border-carbon shadow-neo-sm font-bold'
                     : 'text-carbon/80 dark:text-cream/80 hover:bg-cream dark:hover:bg-nightSurface border-2 border-transparent font-medium'
                 }`}
               >
-                <div className="relative">
+                <div className="relative flex items-center justify-center">
                   {tab.icon}
                   {tab.badge && tab.badge > 0 ? (
                     <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
+                      initial={{ scale: 0.85, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.18, ease: "easeOut" }}
                       className="absolute -top-1.5 -right-2 bg-butter text-carbon font-black text-[9px] w-4 h-4 rounded-full border border-carbon flex items-center justify-center shadow-xs"
                     >
                       {tab.badge}
                     </motion.span>
                   ) : null}
                 </div>
-                <span className="text-[9px] sm:text-[10px] mt-0.5 tracking-tight truncate max-w-full">
+                <span className="text-[9px] sm:text-[10px] mt-0.5 tracking-tight truncate max-w-full font-semibold">
                   {tab.label}
                 </span>
               </motion.button>

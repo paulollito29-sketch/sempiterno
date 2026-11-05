@@ -177,8 +177,8 @@ export const MemoriesView: React.FC<MemoriesViewProps> = ({
               key={mem.id}
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className="bg-white dark:bg-nightCard border-3 border-carbon rounded-2xl p-4 shadow-neo flex flex-col justify-between group hover:-translate-y-1 transition-all duration-200"
+              transition={{ delay: index * 0.04, duration: 0.22, ease: "easeOut" }}
+              className="bg-white dark:bg-nightCard border-3 border-carbon rounded-2xl p-4 shadow-neo flex flex-col justify-between group hover:-translate-y-1 hover:shadow-neo-lg active:scale-[0.99] transition-[transform,box-shadow] duration-180 ease-out"
             >
               <div>
                 {/* Polaroid Photo with brutalist label */}

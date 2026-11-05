@@ -640,8 +640,8 @@ export function App() {
         )}
       </AnimatePresence>
 
-      {/* Footer - With ample pb-28 for mobile floating navbar */}
-      <footer className="border-t-2 border-carbon bg-white dark:bg-nightCard pt-6 pb-28 sm:pb-8 px-4 text-center text-xs font-semibold text-carbon/70 dark:text-cream/70">
+      {/* Footer - With ample clearance for mobile floating navbar & safe-area */}
+      <footer className="border-t-2 border-carbon bg-white dark:bg-nightCard pt-6 pb-[max(7rem,calc(5.5rem+env(safe-area-inset-bottom,0px)))] sm:pb-8 px-4 text-center text-xs font-semibold text-carbon/70 dark:text-cream/70">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3.5">
           <div className="flex items-center gap-2">
             <span className="font-display font-black text-carbon dark:text-cream text-sm">
@@ -652,33 +652,34 @@ export function App() {
           </div>
 
           <motion.div
-            whileHover={{ scale: 1.05 }}
-            className="inline-flex items-center gap-1.5 text-xs bg-rosePastel-light/70 dark:bg-nightSurface border-2 border-carbon px-3 py-1.5 rounded-2xl shadow-neo-sm"
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.98 }}
+            className="inline-flex items-center gap-1.5 text-xs bg-rosePastel-light/70 dark:bg-nightSurface border-2 border-carbon px-3.5 py-1.5 rounded-2xl shadow-neo-sm select-none"
           >
             <span>Hecho con</span>
             <Heart className="w-3.5 h-3.5 text-coral fill-coral inline animate-pulse" />
             <span className="font-bold text-coral">solo para {settings.partner2?.name || 'Alexandra'} 🎀❤️</span>
           </motion.div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 sm:gap-4 flex-wrap justify-center">
             <button
               type="button"
               onClick={() => setIsBedtimeModalOpen(true)}
-              className="text-[11px] font-bold text-coral hover:underline"
+              className="min-h-[36px] py-1 text-[11px] font-bold text-coral hover:underline inline-flex items-center"
             >
               "¡A la camita... a la camita!" 🐭💤
             </button>
             <button
               type="button"
               onClick={() => setIsSettingsModalOpen(true)}
-              className="text-[11px] font-bold text-carbon/70 dark:text-cream/70 hover:underline flex items-center gap-1"
+              className="min-h-[36px] py-1 text-[11px] font-bold text-carbon/80 dark:text-cream/80 hover:underline flex items-center gap-1"
             >
               ⚙️ Ajustes
             </button>
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="text-[11px] font-bold text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-1"
+              className="min-h-[36px] py-1 text-[11px] font-bold text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-1"
             >
               🔄 Recargar
             </button>

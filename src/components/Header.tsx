@@ -119,18 +119,18 @@ export const Header: React.FC<HeaderProps> = ({
           <motion.button
             type="button"
             onClick={onOpenBedtime}
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.92 }}
-            animate={isNightTime ? { y: [0, -3, 0] } : undefined}
+            whileHover={{ scale: 1.06 }}
+            whileTap={{ scale: 0.94 }}
+            animate={isNightTime ? { y: [0, -2, 0] } : undefined}
             transition={isNightTime ? { repeat: Infinity, duration: 2.2, ease: "easeInOut" } : undefined}
             title={isNightTime ? "¡A la camita! (Modo noche activo)" : "Easter egg de buenas noches"}
-            className={`p-1.5 sm:p-2 border-2 border-carbon rounded-xl shadow-neo-sm transition-colors ${
+            className={`min-h-[38px] min-w-[38px] sm:min-h-[42px] sm:min-w-[42px] p-1.5 sm:p-2 border-2 border-carbon rounded-xl shadow-neo-sm flex items-center justify-center transition-colors duration-150 ${
               isNightTime
                 ? 'bg-butter text-carbon'
-                : 'bg-white dark:bg-nightCard text-carbon dark:text-cream hover:bg-cream'
+                : 'bg-white dark:bg-nightCard text-carbon dark:text-cream hover:bg-cream dark:hover:bg-nightSurface'
             }`}
           >
-            <span className="text-xs sm:text-base">🌙</span>
+            <span className="text-xs sm:text-base leading-none">🌙</span>
             <span className="hidden lg:inline-block ml-1 text-xs font-bold">
               {isNightTime ? '¡A la camita!' : 'Camita'}
             </span>
@@ -140,9 +140,9 @@ export const Header: React.FC<HeaderProps> = ({
           <motion.button
             type="button"
             onClick={toggleUser}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.92 }}
-            className={`flex items-center gap-1 px-1.5 py-1 sm:px-2.5 sm:py-1.5 border-2 border-carbon rounded-xl shadow-neo-sm text-xs font-bold transition-colors ${
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.95 }}
+            className={`min-h-[38px] sm:min-h-[42px] flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-1.5 border-2 border-carbon rounded-xl shadow-neo-sm text-xs font-bold transition-colors duration-150 ${
               settings.currentUser === 'Gigio'
                 ? 'bg-rosePastel-light text-carbon hover:bg-rosePastel'
                 : 'bg-lavender text-carbon hover:bg-lavender/80'
@@ -158,7 +158,7 @@ export const Header: React.FC<HeaderProps> = ({
                 ? (settings.partner1?.nickname || 'Gigio')
                 : (settings.partner2?.nickname || 'Rosita')}
             </span>
-            <span className="text-[8px] sm:text-[9px] bg-white/80 dark:bg-night/80 px-1 rounded border border-carbon">
+            <span className="text-[8px] sm:text-[9px] bg-white/80 dark:bg-night/80 px-1 py-0.5 rounded border border-carbon font-mono">
               ⇄
             </span>
           </motion.button>
@@ -167,10 +167,10 @@ export const Header: React.FC<HeaderProps> = ({
           <motion.button
             type="button"
             onClick={handleReloadClick}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.88 }}
+            whileHover={{ scale: 1.06 }}
+            whileTap={{ scale: 0.92 }}
             title="Recargar la aplicación y sincronizar datos"
-            className="p-1.5 sm:p-2 bg-skyNeo/30 hover:bg-skyNeo/50 text-carbon dark:text-cream border-2 border-carbon rounded-xl shadow-neo-sm flex items-center justify-center shrink-0"
+            className="min-h-[38px] min-w-[38px] sm:min-h-[42px] sm:min-w-[42px] p-1.5 sm:p-2 bg-skyNeo/40 hover:bg-skyNeo/60 text-carbon dark:text-cream border-2 border-carbon rounded-xl shadow-neo-sm flex items-center justify-center shrink-0 transition-colors duration-150"
           >
             <RotateCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-carbon dark:text-cream ${isReloading ? 'animate-spin' : ''}`} />
           </motion.button>
@@ -179,10 +179,10 @@ export const Header: React.FC<HeaderProps> = ({
           <motion.button
             type="button"
             onClick={toggleDarkMode}
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.92 }}
+            whileHover={{ scale: 1.06 }}
+            whileTap={{ scale: 0.94 }}
             title={settings.darkMode ? "Cambiar a modo crema claro" : "Cambiar a modo noche oscuro"}
-            className="p-1.5 sm:p-2 bg-white dark:bg-nightCard text-carbon dark:text-cream border-2 border-carbon rounded-xl shadow-neo-sm hover:bg-cream shrink-0"
+            className="min-h-[38px] min-w-[38px] sm:min-h-[42px] sm:min-w-[42px] p-1.5 sm:p-2 bg-white dark:bg-nightCard text-carbon dark:text-cream border-2 border-carbon rounded-xl shadow-neo-sm hover:bg-cream dark:hover:bg-nightSurface flex items-center justify-center shrink-0 transition-colors duration-150"
           >
             {settings.darkMode ? (
               <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-butter" />
@@ -195,10 +195,10 @@ export const Header: React.FC<HeaderProps> = ({
           <motion.button
             type="button"
             onClick={onOpenSettings}
-            whileHover={{ scale: 1.1, rotate: 45 }}
-            whileTap={{ scale: 0.9 }}
+            whileHover={{ scale: 1.06, rotate: 30 }}
+            whileTap={{ scale: 0.92 }}
             title="Ajustes de pareja (apodos, fecha y sincronización)"
-            className="p-1.5 sm:p-2 bg-butter hover:bg-butter-light text-carbon border-2 border-carbon rounded-xl shadow-neo-sm flex items-center justify-center shrink-0"
+            className="min-h-[38px] min-w-[38px] sm:min-h-[42px] sm:min-w-[42px] p-1.5 sm:p-2 bg-butter hover:bg-butter-dark text-carbon border-2 border-carbon rounded-xl shadow-neo-sm flex items-center justify-center shrink-0 transition-colors duration-150"
           >
             <SettingsIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-carbon" />
           </motion.button>

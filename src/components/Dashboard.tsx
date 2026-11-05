@@ -156,7 +156,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </motion.div>
             <div>
               <div className="inline-flex items-center gap-1.5 bg-white dark:bg-nightCard border border-carbon px-2.5 py-0.5 rounded-full text-xs font-bold text-coral mb-1.5 shadow-xs">
-                <Sparkles className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: '6s' }} />
+                <Sparkles className="w-3.5 h-3.5 text-coral" />
                 <span>Nuestra historia de amor</span>
               </div>
               <h2 className="font-display text-2xl sm:text-3xl font-black text-carbon dark:text-cream leading-tight">
@@ -173,9 +173,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <motion.button
               type="button"
               onClick={onOpenNewMemory}
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.94 }}
-              className="neo-btn-primary py-2 px-3 sm:px-4 text-xs sm:text-sm flex items-center gap-1.5"
+              whileHover={{ scale: 1.04, y: -1 }}
+              whileTap={{ scale: 0.96 }}
+              className="neo-btn-primary min-h-[42px] py-2 px-3 sm:px-4 text-xs sm:text-sm flex items-center gap-1.5"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Nuevo Recuerdo</span>
@@ -183,11 +183,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <motion.button
               type="button"
               onClick={onNavigateToRoulette}
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.94 }}
-              className="neo-btn-secondary py-2 px-3 sm:px-4 text-xs sm:text-sm flex items-center gap-1.5"
+              whileHover={{ scale: 1.04, y: -1 }}
+              whileTap={{ scale: 0.96 }}
+              className="neo-btn-secondary min-h-[42px] py-2 px-3 sm:px-4 text-xs sm:text-sm flex items-center gap-1.5"
             >
-              <Sparkles className="w-4 h-4" />
+              <Sparkles className="w-4 h-4 text-coral" />
               <span>¿Qué hacemos hoy?</span>
             </motion.button>
           </div>
@@ -260,26 +260,28 @@ export const Dashboard: React.FC<DashboardProps> = ({
         )}
 
         {/* Live Counters Grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-4" aria-live="polite">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3.5" aria-live="polite">
           {[
-            { label: 'Años', value: elapsed.years, color: 'bg-rosePastel-light' },
-            { label: 'Meses', value: elapsed.months, color: 'bg-butter-light' },
-            { label: 'Días', value: elapsed.days, color: 'bg-skyNeo/50' },
-            { label: 'Horas', value: elapsed.hours, color: 'bg-lavender/60' },
-            { label: 'Minutos', value: elapsed.minutes, color: 'bg-sage/70' },
-            { label: 'Segundos', value: elapsed.seconds, color: 'bg-rosePastel/40', animate: true },
+            { label: 'Años', value: elapsed.years, color: 'bg-rosePastel-light/70' },
+            { label: 'Meses', value: elapsed.months, color: 'bg-butter-light/70' },
+            { label: 'Días', value: elapsed.days, color: 'bg-skyNeo/40' },
+            { label: 'Horas', value: elapsed.hours, color: 'bg-lavender/50' },
+            { label: 'Minutos', value: elapsed.minutes, color: 'bg-sage/50' },
+            { label: 'Segundos', value: elapsed.seconds, color: 'bg-coral-light/30', isSeconds: true },
           ].map((item, idx) => (
             <motion.div
               key={idx}
-              whileHover={{ scale: 1.07, y: -4, rotate: (idx % 2 === 0 ? 1.5 : -1.5) }}
-              whileTap={{ scale: 0.94 }}
-              transition={{ type: "spring", stiffness: 400, damping: 15 }}
-              className={`${item.color} dark:bg-nightSurface border-2 border-carbon rounded-2xl p-2.5 sm:p-4 text-center shadow-neo-sm relative cursor-default`}
+              whileHover={{ scale: 1.04, y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 450, damping: 25 }}
+              className={`${item.color} dark:bg-nightSurface border-2 border-carbon rounded-2xl p-2.5 sm:p-4 text-center shadow-neo-sm relative cursor-default select-none ${
+                item.isSeconds ? 'ring-2 ring-coral/40 dark:ring-coral/50' : ''
+              }`}
             >
-              <div className="font-display text-xl sm:text-4xl font-black text-carbon dark:text-cream tabular-nums">
+              <div className="font-display text-xl sm:text-4xl font-black text-carbon dark:text-cream tabular-nums tracking-tight">
                 {item.value < 10 ? `0${item.value}` : item.value}
               </div>
-              <div className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-carbon/70 dark:text-cream/70 mt-0.5 sm:mt-1">
+              <div className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-carbon/70 dark:text-cream/70 mt-0.5 sm:mt-1">
                 {item.label}
               </div>
             </motion.div>
