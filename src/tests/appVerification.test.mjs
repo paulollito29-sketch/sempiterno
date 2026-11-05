@@ -185,6 +185,15 @@ async function runAllTests() {
   assert(memComplete.memory?.songTitle === 'Lover — Taylor Swift', 'Guarda canción de ese día');
   assert(memComplete.memory?.tags?.length === 2, 'Guarda etiquetas correctamente');
 
+  const memDataUrl = validateAndCreateMemory({
+    title: 'Foto Subida Desde Galería',
+    date: '2026-11-04',
+    category: 'Cena',
+    photos: ['data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD...'],
+  });
+  assert(memDataUrl.ok, 'Permite guardar recuerdo con foto subida directamente desde galería/cámara (DataURL)');
+  assert(memDataUrl.memory?.photos[0].startsWith('data:image/'), 'La foto del dispositivo se almacena íntegra');
+
   // 2. RINCONES (PLACES)
   console.log(bold('\n2. Validación y Creación de Rincones:'));
 

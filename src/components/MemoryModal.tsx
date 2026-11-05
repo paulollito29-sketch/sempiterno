@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { X, Image, Music, Plus, Trash2, Upload, Loader2, Heart } from 'lucide-react';
+import { X, Image, Music, Plus, Trash2, Upload, Loader2, Heart, CheckCircle2 } from 'lucide-react';
 import { Memory, MemoryCategory, CoupleSettings } from '../types';
 import { RatingDisplay } from './RatingDisplay';
 import { MouseEarsIcon } from './TopoEarsIcon';
 import { fireHeartConfetti } from '../utils/confetti';
 import { uploadPhotoToSupabase } from '../utils/supabase';
+import { compressImage } from '../utils/image';
 
 interface MemoryModalProps {
   isOpen: boolean;
@@ -62,45 +63,50 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDevicePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     try {
       setIsUploadingPhoto(true);
       setUploadError(null);
 
-      let finalUrl: string | null = null;
+      const uploadedUrls: string[] = [];
 
-      // 1. Try Supabase Storage
-      if (settings.supabaseUrl && settings.supabaseAnonKey) {
-        finalUrl = await uploadPhotoToSupabase(file, settings.supabaseUrl, settings.supabaseAnonKey);
-        if (!finalUrl) {
-          throw new Error('No se pudo subir la foto a Supabase Storage. Revisa la conexión.');
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        let photoUrl: string | null = null;
+
+        // 1. Try Supabase Storage if configured
+        if (settings.supabaseUrl && settings.supabaseAnonKey) {
+          try {
+            photoUrl = await uploadPhotoToSupabase(file, settings.supabaseUrl, settings.supabaseAnonKey);
+          } catch (storageErr) {
+            console.warn('Supabase storage not available, using compressed image:', storageErr);
+          }
         }
-      } 
-      // 2. Fallback to Local Base64 preview
-      else {
-        finalUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = () => reject(new Error('Error al procesar la foto'));
-          reader.readAsDataURL(file);
-        });
+
+        // 2. Seamless fallback: compress image in browser to lightweight high-res JPEG (~120KB)
+        if (!photoUrl) {
+          photoUrl = await compressImage(file, 1200, 0.82);
+        }
+
+        if (photoUrl) {
+          uploadedUrls.push(photoUrl);
+        }
       }
 
-      if (finalUrl) {
-        const updated = [...photoUrls];
-        if (!updated[0] || updated[0].trim() === '') {
-          updated[0] = finalUrl;
-        } else {
-          updated.push(finalUrl);
-        }
-        setPhotoUrls(updated);
+      if (uploadedUrls.length > 0) {
+        // Remove empty placeholders and add new photos
+        const currentClean = photoUrls.filter((u) => u && u.trim().length > 0);
+        setPhotoUrls([...currentClean, ...uploadedUrls]);
         setUploadError(null);
         fireHeartConfetti();
+      } else {
+        setUploadError('No se pudo procesar la foto seleccionada.');
       }
     } catch (err: any) {
-      setUploadError(err.message || 'Error al subir foto');
+      console.error('Error al subir foto:', err);
+      setUploadError(err.message || 'Error al procesar la foto');
     } finally {
       setIsUploadingPhoto(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -337,9 +343,9 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
             </div>
           </div>
 
-          {/* Photos URL list & Presets */}
+          {/* Photos Section: Gallery Preview, Upload & Presets */}
           <div>
-            <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center justify-between mb-2">
               <label className="font-bold text-carbon dark:text-cream flex items-center gap-1.5 flex-wrap">
                 <Image className="w-4 h-4 text-coral" />
                 <span>Fotos del Recuerdo *</span>
@@ -353,20 +359,21 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploadingPhoto}
-                  className="neo-btn-rose text-[11px] py-1 px-2.5 flex items-center gap-1"
-                  title="Subir foto desde tu dispositivo a Supabase"
+                  className="neo-btn-rose text-[11px] py-1 px-3 flex items-center gap-1.5"
+                  title="Subir foto desde tu dispositivo o galería"
                 >
                   {isUploadingPhoto ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   ) : (
-                    <Upload className="w-3 h-3" />
+                    <Upload className="w-3.5 h-3.5" />
                   )}
-                  <span>{isUploadingPhoto ? 'Subiendo...' : 'Subir foto'}</span>
+                  <span>{isUploadingPhoto ? 'Procesando...' : 'Subir foto'}</span>
                 </button>
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={handleDevicePhotoUpload}
                   className="hidden"
                 />
@@ -376,42 +383,100 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                   onClick={handleAddPhotoField}
                   className="text-xs font-bold text-coral hover:underline flex items-center gap-1"
                 >
-                  <Plus className="w-3 h-3" /> Pegar URL
+                  <Plus className="w-3 h-3" /> Pegar enlace
                 </button>
               </div>
             </div>
 
             {uploadError && (
-              <p className="text-[11px] font-bold text-red-600 bg-red-50 dark:bg-red-950/40 p-2 rounded-xl border border-red-300 mb-2">
+              <p className="text-[11px] font-bold text-red-600 bg-red-50 dark:bg-red-950/40 p-2.5 rounded-xl border-2 border-red-300 mb-2.5">
                 ⚠️ {uploadError}
               </p>
             )}
 
-            <div className="space-y-2">
-              {photoUrls.map((url, idx) => (
-                <div key={idx} className="flex items-center gap-2">
-                  <input
-                    type="url"
-                    value={url}
-                    onChange={(e) => {
-                      handlePhotoChange(idx, e.target.value);
-                      if (uploadError) setUploadError(null);
-                    }}
-                    placeholder="https://images.unsplash.com/... o enlace de tu foto"
-                    className="neo-input flex-1 text-xs"
-                  />
-                  {photoUrls.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemovePhoto(idx)}
-                      className="p-2 border border-carbon rounded-xl bg-rosePastel-light hover:bg-rosePastel"
+            {/* Visual Thumbnail Gallery Preview */}
+            {photoUrls.filter((u) => u && u.trim().length > 0).length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-3">
+                {photoUrls
+                  .map((url, origIdx) => ({ url, origIdx }))
+                  .filter((item) => item.url && item.url.trim().length > 0)
+                  .map((item, displayIdx) => (
+                    <div
+                      key={item.origIdx}
+                      className="relative rounded-xl overflow-hidden border-2 border-carbon aspect-video bg-carbon/5 shadow-neo-sm group"
                     >
-                      <Trash2 className="w-3.5 h-3.5 text-carbon" />
-                    </button>
-                  )}
+                      <img
+                        src={item.url}
+                        alt={`Foto ${displayIdx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <span className="absolute bottom-1 left-1 bg-carbon/80 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                        {displayIdx === 0 ? 'Principal ⭐' : `#${displayIdx + 1}`}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePhoto(item.origIdx)}
+                        className="absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-md border border-carbon shadow-xs transition-colors"
+                        title="Quitar esta foto"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              /* Friendly Upload Dropzone when no photos added */
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-carbon rounded-2xl p-5 mb-3 text-center cursor-pointer bg-cream/50 dark:bg-nightSurface/50 hover:bg-rosePastel-light/30 transition-colors"
+              >
+                <div className="flex flex-col items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-rosePastel-light flex items-center justify-center mb-1.5 border border-carbon">
+                    <Upload className="w-5 h-5 text-coral" />
+                  </div>
+                  <p className="text-xs font-bold text-carbon dark:text-cream">
+                    Toca aquí para subir una foto desde tu celular o computadora
+                  </p>
+                  <p className="text-[11px] text-carbon/60 dark:text-cream/60 mt-0.5">
+                    Puedes seleccionar una o varias imágenes de su cita
+                  </p>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
+
+            {/* Optional manual URL inputs (if user added extra via "Pegar enlace") */}
+            {photoUrls.some((u) => u === '' || !u.startsWith('data:')) && (
+              <div className="space-y-1.5 mb-2">
+                {photoUrls.map((url, idx) => {
+                  // Only show text input for empty slots or external http links
+                  if (url.startsWith('data:')) return null;
+                  return (
+                    <div key={idx} className="flex items-center gap-2">
+                      <input
+                        type="url"
+                        value={url}
+                        onChange={(e) => {
+                          handlePhotoChange(idx, e.target.value);
+                          if (uploadError) setUploadError(null);
+                        }}
+                        placeholder="https://images.unsplash.com/... o enlace de tu foto"
+                        className="neo-input flex-1 text-xs py-1.5"
+                      />
+                      {photoUrls.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePhoto(idx)}
+                          className="p-1.5 border border-carbon rounded-xl bg-rosePastel-light hover:bg-rosePastel"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-carbon" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Quick Suggested Photo Presets */}
             <div className="mt-2 flex flex-wrap gap-1.5 items-center">
@@ -423,16 +488,11 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                   key={idx}
                   type="button"
                   onClick={() => {
-                    const updated = [...photoUrls];
-                    if (!updated[0] || updated[0] === '') {
-                      updated[0] = preset.url;
-                    } else {
-                      updated.push(preset.url);
-                    }
-                    setPhotoUrls(updated);
+                    const clean = photoUrls.filter((u) => u && u.trim().length > 0);
+                    setPhotoUrls([...clean, preset.url]);
                     setUploadError(null);
                   }}
-                  className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-carbon bg-butter-light hover:bg-butter text-carbon"
+                  className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-carbon bg-butter-light hover:bg-butter text-carbon transition-colors"
                 >
                   + {preset.label}
                 </button>

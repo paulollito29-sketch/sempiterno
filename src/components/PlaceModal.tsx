@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { X, MapPin, Star, Utensils, ExternalLink, Image } from 'lucide-react';
+import { X, MapPin, Star, Utensils, ExternalLink, Image, Upload, Loader2, Trash2 } from 'lucide-react';
 import { Place, PlaceCategory, ReturnVerdict, BudgetLevel, CoupleSettings } from '../types';
 import { RatingDisplay } from './RatingDisplay';
+import { uploadPhotoToSupabase } from '../utils/supabase';
+import { compressImage } from '../utils/image';
 
 interface PlaceModalProps {
   isOpen: boolean;
@@ -48,6 +50,39 @@ export const PlaceModal: React.FC<PlaceModalProps> = ({
   const [priceRange, setPriceRange] = useState<BudgetLevel>('$$');
   const [imageUrl, setImageUrl] = useState('');
   const [googleMapsUrl, setGoogleMapsUrl] = useState('');
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDevicePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploadingPhoto(true);
+      let photoUrl: string | null = null;
+
+      if (settings.supabaseUrl && settings.supabaseAnonKey) {
+        try {
+          photoUrl = await uploadPhotoToSupabase(file, settings.supabaseUrl, settings.supabaseAnonKey);
+        } catch (err) {
+          console.warn('Supabase storage not available, using compressed image:', err);
+        }
+      }
+
+      if (!photoUrl) {
+        photoUrl = await compressImage(file, 1200, 0.82);
+      }
+
+      if (photoUrl) {
+        setImageUrl(photoUrl);
+      }
+    } catch (err) {
+      console.error('Error al subir foto de rincón:', err);
+    } finally {
+      setIsUploadingPhoto(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   useEffect(() => {
     if (placeToEdit) {
@@ -277,31 +312,68 @@ export const PlaceModal: React.FC<PlaceModalProps> = ({
 
           {/* Image URL & Presets */}
           <div>
-            <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center justify-between mb-2">
               <label className="font-bold text-carbon dark:text-cream flex items-center gap-1">
                 <Image className="w-4 h-4 text-coral" />
                 <span>Foto o portada del lugar</span>
+                <span className="text-[10px] text-carbon/50 dark:text-cream/50 font-normal">(Opcional)</span>
               </label>
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingPhoto}
+                  className="neo-btn-rose text-[11px] py-1 px-2.5 flex items-center gap-1"
+                >
+                  {isUploadingPhoto ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Upload className="w-3 h-3" />
+                  )}
+                  <span>{isUploadingPhoto ? 'Procesando...' : 'Subir foto'}</span>
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleDevicePhotoUpload}
+                  className="hidden"
+                />
+
                 {imageUrl && (
                   <button
                     type="button"
                     onClick={() => setImageUrl('')}
-                    className="text-[10px] text-coral hover:underline font-bold"
+                    className="text-[11px] text-coral hover:underline font-bold"
                   >
                     Quitar foto
                   </button>
                 )}
-                <span className="text-[10px] text-carbon/50 dark:text-cream/50 font-normal">Opcional</span>
               </div>
             </div>
-            <input
-              type="url"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://... (puedes dejarlo vacío)"
-              className="neo-input w-full text-xs"
-            />
+
+            {imageUrl ? (
+              <div className="relative rounded-xl overflow-hidden border-2 border-carbon aspect-video max-h-48 mb-2 shadow-neo-sm">
+                <img src={imageUrl} alt="Portada" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setImageUrl('')}
+                  className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg border border-carbon shadow-xs transition-colors"
+                  title="Quitar foto"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <input
+                type="url"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="https://... o sube una foto de tu celular (opcional)"
+                className="neo-input w-full text-xs"
+              />
+            )}
+
             <div className="flex flex-wrap gap-1 mt-1.5 items-center">
               <span className="text-[10px] text-carbon/60 dark:text-cream/60 font-semibold">
                 Sugerencias:
@@ -311,7 +383,7 @@ export const PlaceModal: React.FC<PlaceModalProps> = ({
                   key={idx}
                   type="button"
                   onClick={() => setImageUrl(s.url)}
-                  className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-carbon bg-butter-light text-carbon"
+                  className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-carbon bg-butter-light hover:bg-butter text-carbon transition-colors"
                 >
                   {s.label}
                 </button>
