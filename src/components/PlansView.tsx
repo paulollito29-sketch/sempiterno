@@ -200,7 +200,7 @@ export const PlansView: React.FC<PlansViewProps> = ({
                         </span>
                       </div>
 
-                      <h4 className="font-display font-bold text-base text-carbon dark:text-cream mb-1">
+                      <h4 className="font-display font-bold text-sm sm:text-base text-carbon dark:text-cream mb-1 break-words leading-snug">
                         {plan.title}
                       </h4>
 

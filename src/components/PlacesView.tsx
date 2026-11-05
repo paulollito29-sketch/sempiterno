@@ -189,20 +189,22 @@ export const PlacesView: React.FC<PlacesViewProps> = ({
 
               {/* Title & Category */}
               <div className="flex items-start justify-between gap-2 mb-1">
-                <div>
+                <div className="flex-1 min-w-0">
                   <span className="text-[10px] font-bold text-coral uppercase tracking-wider block">
                     {place.category}
                   </span>
-                  <h3 className="font-display font-bold text-lg text-carbon dark:text-cream leading-tight">
+                  <h3 className="font-display font-bold text-base sm:text-lg text-carbon dark:text-cream leading-tight break-words">
                     {place.name}
                   </h3>
                 </div>
                 {place.rating && place.status === 'Visitado' && (
-                  <RatingDisplay
-                    rating={place.rating}
-                    type={settings.ratingStyle}
-                    size="sm"
-                  />
+                  <div className="shrink-0 pt-0.5">
+                    <RatingDisplay
+                      rating={place.rating}
+                      type={settings.ratingStyle}
+                      size="sm"
+                    />
+                  </div>
                 )}
               </div>
 

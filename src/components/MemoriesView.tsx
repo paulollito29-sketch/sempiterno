@@ -212,7 +212,7 @@ export const MemoriesView: React.FC<MemoriesViewProps> = ({
                 </div>
 
                 <h3 
-                  className="font-display text-lg font-bold text-carbon dark:text-cream leading-snug cursor-pointer hover:text-coral transition-colors mb-1"
+                  className="font-display text-base sm:text-lg font-bold text-carbon dark:text-cream leading-snug cursor-pointer hover:text-coral transition-colors mb-1 break-words line-clamp-2"
                   onClick={() => setInspectingMemory(mem)}
                 >
                   {mem.title}
@@ -327,7 +327,7 @@ export const MemoriesView: React.FC<MemoriesViewProps> = ({
 
                   <div className="md:col-span-8 space-y-3">
                     <h3 
-                      className="font-display text-xl font-bold text-carbon dark:text-cream cursor-pointer hover:text-coral"
+                      className="font-display text-lg sm:text-xl font-bold text-carbon dark:text-cream cursor-pointer hover:text-coral transition-colors break-words leading-snug"
                       onClick={() => setInspectingMemory(mem)}
                     >
                       {mem.title}
@@ -453,7 +453,7 @@ export const MemoriesView: React.FC<MemoriesViewProps> = ({
                 <X className="w-4 h-4 text-carbon dark:text-cream" />
               </button>
 
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-2 pr-10 sm:pr-0 flex-wrap">
                 <span className="neo-badge bg-rosePastel text-carbon text-xs">
                   {inspectingMemory.category}
                 </span>
@@ -462,7 +462,7 @@ export const MemoriesView: React.FC<MemoriesViewProps> = ({
                 </span>
               </div>
 
-              <h2 className="font-display text-2xl sm:text-3xl font-black text-carbon dark:text-cream mb-2">
+              <h2 className="font-display text-xl sm:text-3xl font-black text-carbon dark:text-cream mb-2 pr-10 sm:pr-12 break-words leading-tight">
                 {inspectingMemory.title}
               </h2>
 

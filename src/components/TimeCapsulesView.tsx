@@ -120,7 +120,7 @@ export const TimeCapsulesView: React.FC<TimeCapsulesViewProps> = ({
                   </span>
                 </div>
 
-                <h3 className="font-display font-black text-lg text-carbon dark:text-cream leading-tight mb-2 pr-10">
+                <h3 className="font-display font-black text-base sm:text-lg text-carbon dark:text-cream leading-snug mb-2 pr-10 break-words">
                   {capsule.title}
                 </h3>
 

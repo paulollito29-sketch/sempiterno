@@ -315,20 +315,24 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <div className="space-y-4">
                 <div className="bg-white dark:bg-nightSurface border-2 border-carbon rounded-2xl p-4 sm:p-5 shadow-neo-sm">
                   <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <span className="neo-badge bg-coral text-white text-[11px] mb-2 inline-block">
-                        {nextPlan.category}
-                      </span>
-                      <h4 className="font-display text-xl font-bold text-carbon dark:text-cream">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                        <span className="neo-badge bg-coral text-white text-[10px] sm:text-[11px] inline-block">
+                          {nextPlan.category}
+                        </span>
+                        <span className="text-[10px] sm:text-xs font-bold px-2 py-0.5 bg-butter text-carbon rounded-md border border-carbon shrink-0">
+                          Presupuesto {nextPlan.budget}
+                        </span>
+                      </div>
+                      <h4 className="font-display text-lg sm:text-xl font-black text-carbon dark:text-cream leading-snug break-words">
                         {nextPlan.title}
                       </h4>
-                      <p className="text-xs sm:text-sm text-carbon/80 dark:text-cream/80 mt-1">
-                        {nextPlan.description}
-                      </p>
+                      {nextPlan.description && (
+                        <p className="text-xs sm:text-sm text-carbon/80 dark:text-cream/80 mt-1 break-words leading-relaxed">
+                          {nextPlan.description}
+                        </p>
+                      )}
                     </div>
-                    <span className="text-xs font-bold px-2 py-1 bg-butter rounded-lg border border-carbon shrink-0">
-                      Presupuesto {nextPlan.budget}
-                    </span>
                   </div>
 
                   {/* Date, Time, Location */}
@@ -509,20 +513,22 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 </div>
 
                 {/* Title & Category */}
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div>
+                <div className="flex items-start justify-between gap-2.5 mb-2">
+                  <div className="flex-1 min-w-0">
                     <span className="neo-badge bg-rosePastel text-carbon text-[10px] mb-1 inline-block">
                       {currentFlashback.category}
                     </span>
-                    <h4 className="font-display text-base sm:text-lg font-bold text-carbon dark:text-cream leading-tight">
+                    <h4 className="font-display text-base sm:text-lg font-black text-carbon dark:text-cream leading-snug break-words">
                       {currentFlashback.title}
                     </h4>
                   </div>
-                  <RatingDisplay
-                    rating={currentFlashback.rating}
-                    type={settings.ratingStyle}
-                    size="sm"
-                  />
+                  <div className="shrink-0 pt-0.5">
+                    <RatingDisplay
+                      rating={currentFlashback.rating}
+                      type={settings.ratingStyle}
+                      size="sm"
+                    />
+                  </div>
                 </div>
 
                 {/* Dual Perspective Snippet (if either exists) */}

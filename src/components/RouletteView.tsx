@@ -204,7 +204,7 @@ export const RouletteView: React.FC<RouletteViewProps> = ({
                 </span>
               </div>
 
-              <h3 className="font-display text-xl sm:text-2xl font-black text-carbon mb-2">
+              <h3 className="font-display text-lg sm:text-2xl font-black text-carbon mb-2 break-words leading-tight">
                 {selectedPlan.title}
               </h3>
 
