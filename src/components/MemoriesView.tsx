@@ -437,12 +437,12 @@ export const MemoriesView: React.FC<MemoriesViewProps> = ({
       {/* INSPECT / FULL DETAIL MEMORY MODAL */}
       <AnimatePresence>
         {inspectingMemory && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-carbon/75 backdrop-blur-sm overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-2.5 sm:p-4 bg-carbon/75 backdrop-blur-sm overflow-y-auto overscroll-contain">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-3xl bg-cream dark:bg-nightCard border-3 border-carbon rounded-3xl p-5 sm:p-8 shadow-neo-xl my-6 relative max-h-[90vh] overflow-y-auto"
+              className="w-full max-w-3xl bg-cream dark:bg-nightCard border-3 border-carbon rounded-3xl p-5 sm:p-8 shadow-neo-xl my-2 sm:my-6 relative max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto"
             >
               {/* Close Button */}
               <button

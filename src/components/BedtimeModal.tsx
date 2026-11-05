@@ -56,13 +56,13 @@ export const BedtimeModal: React.FC<BedtimeModalProps> = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-carbon/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 bg-carbon/60 backdrop-blur-sm overflow-y-auto overscroll-contain">
           <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-            className="w-full max-w-md bg-cream dark:bg-nightCard border-3 border-carbon rounded-3xl p-6 shadow-neo-xl relative overflow-hidden"
+            className="w-full max-w-md bg-cream dark:bg-nightCard border-3 border-carbon rounded-3xl p-6 shadow-neo-xl relative overflow-hidden my-auto sm:my-8 max-h-[92dvh] overflow-y-auto"
           >
             {/* Background stars */}
             <div className="absolute top-3 right-12 text-yellow-400 animate-pulse text-lg">✨</div>

@@ -54,26 +54,29 @@ export const TimeCapsuleModal: React.FC<TimeCapsuleModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-carbon/75 backdrop-blur-sm overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-2.5 sm:p-4 bg-carbon/75 backdrop-blur-sm overflow-y-auto overscroll-contain">
       <motion.div
         initial={{ scale: 0.95, opacity: 0, y: 15 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 15 }}
-        className="w-full max-w-xl bg-cream dark:bg-nightCard border-3 border-carbon rounded-3xl p-5 sm:p-7 shadow-neo-xl my-8 relative"
+        className="w-full max-w-xl bg-cream dark:bg-nightCard border-3 border-carbon rounded-3xl p-5 sm:p-7 shadow-neo-xl my-2 sm:my-8 relative max-h-[92dvh] sm:max-h-[88vh] overflow-y-auto flex flex-col"
       >
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 bg-white dark:bg-nightSurface border-2 border-carbon rounded-full hover:bg-rosePastel shadow-neo-sm"
-        >
-          <X className="w-4 h-4 text-carbon dark:text-cream" />
-        </button>
-
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-2xl">⏳</span>
-          <h2 className="font-display text-xl sm:text-2xl font-black text-carbon dark:text-cream">
-            Sellar Nueva Cápsula del Tiempo
-          </h2>
+        {/* Sticky Header with Title & Close Button */}
+        <div className="sticky -top-5 sm:-top-7 -mx-5 sm:-mx-7 px-5 sm:px-7 pt-5 sm:pt-7 pb-3 bg-cream/95 dark:bg-nightCard/95 backdrop-blur-md border-b-2 border-carbon/15 mb-4 z-20 flex items-center justify-between gap-2 rounded-t-3xl">
+          <div className="flex items-center gap-2 min-w-0 pr-8">
+            <span className="text-2xl shrink-0">⏳</span>
+            <h2 className="font-display text-lg sm:text-2xl font-black text-carbon dark:text-cream truncate">
+              Sellar Nueva Cápsula del Tiempo
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 sm:p-2 bg-white dark:bg-nightSurface border-2 border-carbon rounded-full hover:bg-rosePastel shadow-neo-sm shrink-0"
+            title="Cerrar modal"
+          >
+            <X className="w-4 h-4 text-carbon dark:text-cream" />
+          </button>
         </div>
 
         <p className="text-xs text-carbon/70 dark:text-cream/70 mb-4 font-medium">

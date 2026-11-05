@@ -83,12 +83,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-carbon/50 backdrop-blur-sm overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-2.5 sm:p-4 bg-carbon/75 backdrop-blur-sm overflow-y-auto overscroll-contain">
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 10 }}
-        className="neo-modal w-full max-w-lg my-8 bg-cream dark:bg-nightCard border-3 border-carbon shadow-neo-lg rounded-3xl p-5 sm:p-6"
+        className="neo-modal w-full max-w-lg my-2 sm:my-8 bg-cream dark:bg-nightCard border-3 border-carbon shadow-neo-lg rounded-3xl p-5 sm:p-6 max-h-[92dvh] sm:max-h-[88vh] overflow-y-auto flex flex-col"
       >
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b-2 border-carbon/20">
