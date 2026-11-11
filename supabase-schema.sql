@@ -94,6 +94,28 @@ CREATE TABLE IF NOT EXISTS public.sempiterno_capsules (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 6. TABLA: Parejas y Códigos Bidireccionales
+CREATE TABLE IF NOT EXISTS public.sempiterno_couples (
+  code TEXT PRIMARY KEY,
+  couple_id TEXT NOT NULL,
+  owner_name TEXT,
+  owner_email TEXT,
+  paired_with_code TEXT,
+  partner_name TEXT,
+  subscription_plan TEXT DEFAULT 'free',
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 7. TABLA: Pensamientos en Vivo
+CREATE TABLE IF NOT EXISTS public.sempiterno_thoughts (
+  id TEXT PRIMARY KEY,
+  couple_id TEXT NOT NULL DEFAULT 'couple_main',
+  sender_name TEXT NOT NULL,
+  sender_role TEXT NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ------------------------------------------------------------------------------
 -- SEGURIDAD: POLÍTICAS RLS (Row Level Security) Y PRIVILEGIOS
 -- ------------------------------------------------------------------------------
@@ -109,12 +131,16 @@ ALTER TABLE public.sempiterno_memories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sempiterno_plans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sempiterno_places ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sempiterno_capsules ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sempiterno_couples ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sempiterno_thoughts ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Acceso público sempiterno_settings" ON public.sempiterno_settings FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Acceso público sempiterno_memories" ON public.sempiterno_memories FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Acceso público sempiterno_plans" ON public.sempiterno_plans FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Acceso público sempiterno_places" ON public.sempiterno_places FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Acceso público sempiterno_capsules" ON public.sempiterno_capsules FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Acceso público sempiterno_couples" ON public.sempiterno_couples FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Acceso público sempiterno_thoughts" ON public.sempiterno_thoughts FOR ALL USING (true) WITH CHECK (true);
 
 -- ------------------------------------------------------------------------------
 -- REALTIME: TRANSMITIR CAMBIOS EN TIEMPO REAL
@@ -126,7 +152,9 @@ BEGIN;
     public.sempiterno_memories,
     public.sempiterno_plans,
     public.sempiterno_places,
-    public.sempiterno_capsules;
+    public.sempiterno_capsules,
+    public.sempiterno_couples,
+    public.sempiterno_thoughts;
 COMMIT;
 
 -- ------------------------------------------------------------------------------

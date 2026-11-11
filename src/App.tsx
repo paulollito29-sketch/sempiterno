@@ -1,29 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Header } from './components/Header';
-import { Navbar, NavTab } from './components/Navbar';
-import { Dashboard } from './components/Dashboard';
+import { App as CapApp } from '@capacitor/app';
+import { BottomNav, MobileTab } from './components/BottomNav';
+import { HomeView } from './components/HomeView';
 import { MemoriesView } from './components/MemoriesView';
 import { PlansView } from './components/PlansView';
 import { PlacesView } from './components/PlacesView';
 import { RouletteView } from './components/RouletteView';
 import { TimeCapsulesView } from './components/TimeCapsulesView';
+import { SettingsView } from './components/SettingsView';
+import { AuthScreen } from './components/AuthScreen';
+import { PairingScreen } from './components/PairingScreen';
+import { PaywallScreen } from './components/PaywallScreen';
+import { PairManageModal } from './components/PairManageModal';
+import { ThoughtModal } from './components/ThoughtModal';
 import { MemoryModal } from './components/MemoryModal';
 import { PlanModal } from './components/PlanModal';
 import { PlaceModal } from './components/PlaceModal';
 import { TimeCapsuleModal } from './components/TimeCapsuleModal';
 import { BedtimeModal } from './components/BedtimeModal';
 import { SettingsModal } from './components/SettingsModal';
-import { 
-  CoupleSettings, 
-  Memory, 
-  Plan, 
-  Place, 
-  TimeCapsule, 
-  PlanStatus,
+import {
+  AuthProviderType,
+  CoupleSettings,
+  CoupleThought,
+  KissesData,
+  Memory,
   MemoryCategory,
+  NotificationSettings,
+  Place,
+  Plan,
+  PlanStatus,
   ReturnVerdict,
-  KissesData
+  SubscriptionPlan,
+  TimeCapsule,
+  UserSession,
 } from './types';
 import {
   loadSettings,
@@ -38,9 +49,8 @@ import {
   saveTimeCapsules,
   resetAllDataToDefault,
 } from './utils/storage';
-import { isBedtime, calculateCountdown } from './utils/date';
 import { fireHeartConfetti, fireSuperCelebration } from './utils/confetti';
-import { Heart, X } from 'lucide-react';
+import { ArrowLeft, Heart, X } from 'lucide-react';
 import {
   fetchAllFromSupabase,
   syncMemoryToSupabase,
@@ -55,22 +65,58 @@ import {
   subscribeToSupabase,
   sendKissToSupabase,
 } from './utils/supabase';
+import {
+  clearUserSession,
+  fetchCloudThought,
+  getFreemiumUsage,
+  loadLatestThought,
+  loadNotificationSettings,
+  loadSubscriptionPlan,
+  loadUserSession,
+  loginWithProvider,
+  pairWithPartnerCode,
+  publishCoupleThought,
+  saveNotificationSettings,
+  saveSubscriptionPlan,
+  unlinkPartnerSession,
+} from './utils/coupleCloud';
+import { isNativePlatform, syncNativeStatusBar, triggerHapticSuccess } from './utils/native';
+
+type AppFlowStage = 'login' | 'pair' | 'paywall' | 'app';
 
 export function App() {
+  // User Session, Flow Stage & Freemium State
+  const [userSession, setUserSession] = useState<UserSession | null>(() => loadUserSession());
+  const [subscriptionPlan, setSubscriptionPlan] = useState<SubscriptionPlan>(() =>
+    loadSubscriptionPlan()
+  );
+  const [flowStage, setFlowStage] = useState<AppFlowStage>(() => {
+    const existingSession = loadUserSession();
+    if (!existingSession) return 'login';
+    return 'app';
+  });
+  const [notifications, setNotifications] = useState<NotificationSettings>(() =>
+    loadNotificationSettings()
+  );
+  const [latestThought, setLatestThought] = useState<CoupleThought>(() => loadLatestThought());
+
   // Settings & Theme
   const [settings, setSettings] = useState<CoupleSettings>(() => loadSettings());
-  
+
   // Data State
   const [memories, setMemories] = useState<Memory[]>(() => loadMemories());
   const [plans, setPlans] = useState<Plan[]>(() => loadPlans());
   const [places, setPlaces] = useState<Place[]>(() => loadPlaces());
   const [capsules, setCapsules] = useState<TimeCapsule[]>(() => loadTimeCapsules());
 
-  // Navigation
-  const [currentTab, setCurrentTab] = useState<NavTab>('presente');
+  // Mobile Navigation
+  const [currentTab, setCurrentTab] = useState<MobileTab>('inicio');
   const [selectedMemoryId, setSelectedMemoryId] = useState<string | null>(null);
 
   // Modals
+  const [isPairManageOpen, setIsPairManageOpen] = useState(false);
+  const [isThoughtModalOpen, setIsThoughtModalOpen] = useState(false);
+
   const [isMemoryModalOpen, setIsMemoryModalOpen] = useState(false);
   const [memoryToEdit, setMemoryToEdit] = useState<Memory | null>(null);
   const [prefillPlanForMemory, setPrefillPlanForMemory] = useState<{
@@ -89,30 +135,79 @@ export function App() {
   const [isBedtimeModalOpen, setIsBedtimeModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
-  // Realtime Bedtime Kisses
+  // Realtime Bedtime Kisses & Undo Banner
   const [kissesData, setKissesData] = useState<KissesData | undefined>(undefined);
-  const [incomingKissAlert, setIncomingKissAlert] = useState<{ senderName: string; time: string } | null>(null);
-  const [completedPlanUndo, setCompletedPlanUndo] = useState<{ plan: Plan; prevStatus: PlanStatus } | null>(null);
+  const [incomingKissAlert, setIncomingKissAlert] = useState<{
+    senderName: string;
+    time: string;
+  } | null>(null);
+  const [completedPlanUndo, setCompletedPlanUndo] = useState<{
+    plan: Plan;
+    prevStatus: PlanStatus;
+  } | null>(null);
+  const [freemiumLimitToast, setFreemiumLimitToast] = useState<string | null>(null);
 
-  // Auto-dismiss undo banner
+  const usage = getFreemiumUsage(
+    memories.length,
+    places.length,
+    capsules.length,
+    subscriptionPlan
+  );
+
+  // Auto-dismiss undo & freemium banners
   useEffect(() => {
     if (!completedPlanUndo) return;
-    const timer = setTimeout(() => {
-      setCompletedPlanUndo(null);
-    }, 8000);
+    const timer = setTimeout(() => setCompletedPlanUndo(null), 8000);
     return () => clearTimeout(timer);
   }, [completedPlanUndo]);
 
-  // Sync dark mode class
+  useEffect(() => {
+    if (!freemiumLimitToast) return;
+    const timer = setTimeout(() => setFreemiumLimitToast(null), 4500);
+    return () => clearTimeout(timer);
+  }, [freemiumLimitToast]);
+
+  // Sync dark mode class + native Android status bar
   useEffect(() => {
     if (settings.darkMode) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
+    syncNativeStatusBar(settings.darkMode);
   }, [settings.darkMode]);
 
-  // 1. Supabase Realtime & Cloud Data Fetch
+  // Native Android back button handler
+  useEffect(() => {
+    if (!isNativePlatform()) return;
+    let listenerHandle: { remove: () => Promise<void> } | null = null;
+    CapApp.addListener('backButton', () => {
+      if (isMemoryModalOpen) setIsMemoryModalOpen(false);
+      else if (isPlanModalOpen) setIsPlanModalOpen(false);
+      else if (isPlaceModalOpen) setIsPlaceModalOpen(false);
+      else if (isCapsuleModalOpen) setIsCapsuleModalOpen(false);
+      else if (isThoughtModalOpen) setIsThoughtModalOpen(false);
+      else if (isPairManageOpen) setIsPairManageOpen(false);
+      else if (currentTab !== 'inicio') setCurrentTab('inicio');
+      else CapApp.exitApp();
+    }).then((h) => {
+      listenerHandle = h;
+    });
+
+    return () => {
+      listenerHandle?.remove();
+    };
+  }, [
+    isMemoryModalOpen,
+    isPlanModalOpen,
+    isPlaceModalOpen,
+    isCapsuleModalOpen,
+    isThoughtModalOpen,
+    isPairManageOpen,
+    currentTab,
+  ]);
+
+  // Supabase Realtime & Cloud Data Fetch
   useEffect(() => {
     let isMounted = true;
 
@@ -120,7 +215,10 @@ export function App() {
       if (!settings.supabaseUrl && !(import.meta as any).env?.VITE_SUPABASE_URL) return;
 
       try {
-        const cloudData = await fetchAllFromSupabase(settings.supabaseUrl, settings.supabaseAnonKey);
+        const cloudData = await fetchAllFromSupabase(
+          settings.supabaseUrl,
+          settings.supabaseAnonKey
+        );
         if (cloudData && isMounted) {
           if (cloudData.settings) {
             setSettings((prev) => {
@@ -151,7 +249,6 @@ export function App() {
           }
           if (cloudData.kisses) {
             setKissesData((prev) => {
-              // If new kisses received from the other partner, alert the user!
               if (
                 prev &&
                 cloudData.kisses &&
@@ -162,15 +259,30 @@ export function App() {
                   cloudData.kisses.lastSender === 'Gigio'
                     ? settings.partner1?.nickname || 'Gigio'
                     : settings.partner2?.nickname || 'Rosita';
-                setIncomingKissAlert({
-                  senderName: senderNick,
-                  time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                });
-                fireHeartConfetti();
+                if (notifications.kissesAndTouches) {
+                  setIncomingKissAlert({
+                    senderName: senderNick,
+                    time: new Date().toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    }),
+                  });
+                  triggerHapticSuccess(notifications.hapticsEnabled);
+                  fireHeartConfetti();
+                }
               }
               return cloudData.kisses;
             });
           }
+        }
+
+        const cloudThought = await fetchCloudThought(
+          userSession?.coupleId || 'couple_main',
+          settings.supabaseUrl,
+          settings.supabaseAnonKey
+        );
+        if (cloudThought && isMounted) {
+          setLatestThought(cloudThought);
         }
       } catch (err) {
         console.warn('Error cargando datos de Supabase:', err);
@@ -179,22 +291,98 @@ export function App() {
 
     loadSupabase();
 
-    const unsubscribe = subscribeToSupabase(() => {
-      console.log('⚡ Sincronización en vivo recibida desde Supabase');
-      loadSupabase();
-    }, settings.supabaseUrl, settings.supabaseAnonKey);
+    const unsubscribe = subscribeToSupabase(
+      () => {
+        loadSupabase();
+      },
+      settings.supabaseUrl,
+      settings.supabaseAnonKey
+    );
 
     return () => {
       isMounted = false;
       unsubscribe();
     };
-  }, [settings.supabaseUrl, settings.supabaseAnonKey, settings.currentUser]);
+  }, [
+    settings.supabaseUrl,
+    settings.supabaseAnonKey,
+    settings.currentUser,
+    userSession?.coupleId,
+    notifications.kissesAndTouches,
+    notifications.hapticsEnabled,
+  ]);
 
-  // Send bedtime kiss in real time
+  // --- AUTH, PAIRING & PAYWALL HANDLERS ---
+  const handleLogin = async (provider: AuthProviderType, email?: string, name?: string) => {
+    const { session } = await loginWithProvider(
+      provider,
+      email,
+      name,
+      settings.supabaseUrl,
+      settings.supabaseAnonKey
+    );
+    setUserSession(session);
+    setFlowStage('pair');
+  };
+
+  const handlePairWithCode = async (partnerCode: string) => {
+    if (!userSession) return;
+    const { updatedSession } = await pairWithPartnerCode(
+      userSession,
+      partnerCode,
+      settings.supabaseUrl,
+      settings.supabaseAnonKey
+    );
+    setUserSession(updatedSession);
+  };
+
+  const handleUnlinkPartner = () => {
+    if (!userSession) return;
+    const updated = unlinkPartnerSession(userSession);
+    setUserSession(updated);
+    setFlowStage('pair');
+  };
+
+  const handleSelectPlan = (plan: SubscriptionPlan) => {
+    saveSubscriptionPlan(plan);
+    setSubscriptionPlan(plan);
+    setFlowStage('app');
+    if (plan !== 'free') {
+      fireSuperCelebration();
+    }
+  };
+
+  const handleLogout = () => {
+    clearUserSession();
+    setUserSession(null);
+    setFlowStage('login');
+    setCurrentTab('inicio');
+  };
+
+  // --- LIVE THOUGHT & KISS HANDLERS ---
+  const handleSendThought = async (text: string) => {
+    const isGigio = settings.currentUser === 'Gigio';
+    const senderRole = isGigio ? 'Gigio' : 'Rosita';
+    const senderName = isGigio
+      ? `${settings.partner1.name} (${settings.partner1.nickname})`
+      : `${settings.partner2.name} (${settings.partner2.nickname})`;
+    const created = await publishCoupleThought(
+      userSession?.coupleId || 'couple_main',
+      senderName,
+      senderRole,
+      text,
+      settings.supabaseUrl,
+      settings.supabaseAnonKey
+    );
+    setLatestThought(created);
+  };
+
   const handleSendKiss = async () => {
     const isGigio = settings.currentUser === 'Gigio';
     const senderRole = isGigio ? 'Gigio' : 'Rosita';
-    const senderName = isGigio ? (settings.partner1.name || 'Paulo') : (settings.partner2.name || 'Alexandra');
+    const senderName = isGigio
+      ? settings.partner1.name || 'Paulo'
+      : settings.partner2.name || 'Alexandra';
     const updated = await sendKissToSupabase(
       senderRole,
       senderName,
@@ -206,7 +394,7 @@ export function App() {
     }
   };
 
-  // Save changes to storage & sync live to Supabase for both Paulo and Alexandra
+  // --- SETTINGS & DATA HANDLERS ---
   const handleUpdateSettings = (newSettings: CoupleSettings) => {
     setSettings(newSettings);
     saveSettings(newSettings);
@@ -227,15 +415,43 @@ export function App() {
     fireSuperCelebration();
   };
 
+  // --- GATED CREATION TRIGGERS (FREEMIUM LIMITS) ---
+  const tryOpenNewMemory = () => {
+    if (!usage.canAddMemory) {
+      setFreemiumLimitToast('Alcanzaste el límite de 10 recuerdos del Plan Free.');
+      setFlowStage('paywall');
+      return;
+    }
+    setMemoryToEdit(null);
+    setPrefillPlanForMemory(null);
+    setIsMemoryModalOpen(true);
+  };
+
+  const tryOpenNewPlace = () => {
+    if (!usage.canAddPlace) {
+      setFreemiumLimitToast('Alcanzaste el límite de 5 rincones del Plan Free.');
+      setFlowStage('paywall');
+      return;
+    }
+    setPlaceToEdit(null);
+    setIsPlaceModalOpen(true);
+  };
+
+  const tryOpenNewCapsule = () => {
+    if (!usage.canAddCapsule) {
+      setFreemiumLimitToast('El Plan Free incluye 1 cápsula. Pásate a Premium para crear ilimitadas.');
+      setFlowStage('paywall');
+      return;
+    }
+    setIsCapsuleModalOpen(true);
+  };
+
   // --- MEMORY HANDLERS ---
   const handleSaveMemory = (newMemory: Memory) => {
     const exists = memories.some((m) => m.id === newMemory.id);
-    let updated: Memory[];
-    if (exists) {
-      updated = memories.map((m) => (m.id === newMemory.id ? newMemory : m));
-    } else {
-      updated = [newMemory, ...memories];
-    }
+    const updated = exists
+      ? memories.map((m) => (m.id === newMemory.id ? newMemory : m))
+      : [newMemory, ...memories];
     setMemories(updated);
     saveMemories(updated);
     syncMemoryToSupabase(newMemory, settings.supabaseUrl, settings.supabaseAnonKey);
@@ -251,12 +467,9 @@ export function App() {
   // --- PLAN HANDLERS ---
   const handleSavePlan = (newPlan: Plan) => {
     const exists = plans.some((p) => p.id === newPlan.id);
-    let updated: Plan[];
-    if (exists) {
-      updated = plans.map((p) => (p.id === newPlan.id ? newPlan : p));
-    } else {
-      updated = [newPlan, ...plans];
-    }
+    const updated = exists
+      ? plans.map((p) => (p.id === newPlan.id ? newPlan : p))
+      : [newPlan, ...plans];
     setPlans(updated);
     savePlans(updated);
     syncPlanToSupabase(newPlan, settings.supabaseUrl, settings.supabaseAnonKey);
@@ -285,9 +498,7 @@ export function App() {
     }
   };
 
-  // Convert Plan to Memory
   const handleConvertPlanToMemory = (plan: Plan) => {
-    // Map plan category to memory category
     let memCat: MemoryCategory = 'Cena';
     if (plan.category === 'Comida & Cafés') memCat = 'Cena';
     if (plan.category === 'Viajes') memCat = 'Viaje';
@@ -303,11 +514,8 @@ export function App() {
     setMemoryToEdit(null);
     setIsMemoryModalOpen(true);
 
-    // Mark plan as lived
     handleUpdatePlanStatus(plan.id, '¡Vivido!');
     fireHeartConfetti();
-
-    // Enable undo safety
     setCompletedPlanUndo({ plan, prevStatus: previousStatus });
   };
 
@@ -322,12 +530,9 @@ export function App() {
   // --- PLACE HANDLERS ---
   const handleSavePlace = (newPlace: Place) => {
     const exists = places.some((p) => p.id === newPlace.id);
-    let updated: Place[];
-    if (exists) {
-      updated = places.map((p) => (p.id === newPlace.id ? newPlace : p));
-    } else {
-      updated = [newPlace, ...places];
-    }
+    const updated = exists
+      ? places.map((p) => (p.id === newPlace.id ? newPlace : p))
+      : [newPlace, ...places];
     setPlaces(updated);
     savePlaces(updated);
     syncPlaceToSupabase(newPlace, settings.supabaseUrl, settings.supabaseAnonKey);
@@ -341,16 +546,14 @@ export function App() {
   };
 
   const handleTogglePlaceStatus = (place: Place) => {
-    const newStatus: 'Visitado' | 'Por conocer' = place.status === 'Visitado' ? 'Por conocer' : 'Visitado';
-    const newVerdict: ReturnVerdict = newStatus === 'Visitado' ? '¡Sí o sí!' : 'Pendiente de probar';
+    const newStatus: 'Visitado' | 'Por conocer' =
+      place.status === 'Visitado' ? 'Por conocer' : 'Visitado';
+    const newVerdict: ReturnVerdict =
+      newStatus === 'Visitado' ? '¡Sí o sí!' : 'Pendiente de probar';
     let targetPlace: Place | undefined;
     const updated: Place[] = places.map((p) => {
       if (p.id === place.id) {
-        targetPlace = {
-          ...p,
-          status: newStatus,
-          wouldReturn: newVerdict,
-        };
+        targetPlace = { ...p, status: newStatus, wouldReturn: newVerdict };
         return targetPlace;
       }
       return p;
@@ -395,9 +598,7 @@ export function App() {
     }
   };
 
-  // --- ROULETTE CHALLENGE ACCEPT ---
   const handleAcceptPlanChallenge = (plan: Plan) => {
-    // Schedule for this weekend / upcoming date
     const today = new Date();
     today.setDate(today.getDate() + 3);
     const dateStr = today.toISOString().split('T')[0];
@@ -411,84 +612,89 @@ export function App() {
 
     handleSavePlan(scheduledPlan);
     fireSuperCelebration();
-    setCurrentTab('presente'); // Take them back to dashboard to see their countdown!
+    setCurrentTab('planes');
   };
 
-  // Calculate badges
-  const unlockedCapsulesCount = capsules.filter((c) => {
-    const cd = calculateCountdown(c.unlockDate);
-    return cd.isPast || c.isCustomOpened;
-  }).length;
+  // --- FLOW ROUTING ---
+  if (flowStage === 'login' || !userSession) {
+    return <AuthScreen onLogin={handleLogin} />;
+  }
 
-  const upcomingPlansCount = plans.filter((p) => p.status === 'Agendado').length;
+  if (flowStage === 'pair') {
+    return (
+      <PairingScreen
+        session={userSession}
+        onPairWithCode={handlePairWithCode}
+        onContinueToPlans={() => setFlowStage('paywall')}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
+  if (flowStage === 'paywall') {
+    return (
+      <>
+        {freemiumLimitToast && (
+          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-full bg-stone-900 text-white text-xs font-semibold shadow-lg">
+            {freemiumLimitToast}
+          </div>
+        )}
+        <PaywallScreen
+          currentPlan={subscriptionPlan}
+          onSelectPlan={handleSelectPlan}
+          onBack={() => setFlowStage('app')}
+        />
+      </>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-cream dark:bg-night flex flex-col selection:bg-coral selection:text-white">
-      {/* Header */}
-      <Header
-        settings={settings}
-        onUpdateSettings={handleUpdateSettings}
-        onOpenSettings={() => setIsSettingsModalOpen(true)}
-        onOpenBedtime={() => setIsBedtimeModalOpen(true)}
-      />
+    <div className="min-h-[100dvh] bg-[#FAF8F5] dark:bg-[#0F1015] flex flex-col selection:bg-rose-500 selection:text-white">
+      {/* Main Content Area (Mobile Minimalist Container) */}
+      <main className="flex-1 w-full max-w-xl mx-auto px-4 sm:px-6 pt-3 pb-28">
+        {/* Back Breadcrumb when browsing secondary tabs (Planes / Ruleta) */}
+        {(currentTab === 'planes' || currentTab === 'ruleta') && (
+          <button
+            type="button"
+            onClick={() => setCurrentTab('inicio')}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 mb-3 pt-1"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Volver a Inicio
+          </button>
+        )}
 
-      {/* Navigation */}
-      <Navbar
-        currentTab={currentTab}
-        onSelectTab={(tab) => {
-          setCurrentTab(tab);
-          setSelectedMemoryId(null);
-        }}
-        unlockedCapsulesCount={unlockedCapsulesCount}
-        upcomingPlansCount={upcomingPlansCount}
-      />
-
-      {/* Main Content Area with Page Transition Animation */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 pt-4 sm:pt-6 pb-12 sm:pb-16">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentTab}
-            initial={{ opacity: 0, y: 15, scale: 0.99 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -15, scale: 0.99 }}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
           >
-            {currentTab === 'presente' && (
-              <Dashboard
+            {currentTab === 'inicio' && (
+              <HomeView
                 settings={settings}
-                memories={memories}
-                plans={plans}
-                onNavigateToMemories={(memId) => {
-                  if (memId) setSelectedMemoryId(memId);
-                  setCurrentTab('archivo');
-                }}
-                onNavigateToPlans={() => setCurrentTab('planes')}
-                onNavigateToRoulette={() => setCurrentTab('ruleta')}
-                onOpenNewMemory={() => {
-                  setMemoryToEdit(null);
-                  setPrefillPlanForMemory(null);
-                  setIsMemoryModalOpen(true);
-                }}
-                onOpenNewPlan={() => {
-                  setPlanToEdit(null);
-                  setIsPlanModalOpen(true);
-                }}
-                onUpdateStartDate={(newDate) => {
-                  handleUpdateSettings({ ...settings, startDate: newDate });
-                }}
-                onCompletePlan={handleConvertPlanToMemory}
+                session={userSession}
+                thought={latestThought}
+                kissesData={kissesData}
+                placesCount={places.length}
+                capsulesCount={capsules.length}
+                plansCount={plans.length}
+                hapticsEnabled={notifications.hapticsEnabled}
+                onSendKiss={handleSendKiss}
+                onOpenPairManage={() => setIsPairManageOpen(true)}
+                onOpenThoughtModal={() => setIsThoughtModalOpen(true)}
+                onNavigateTab={(tab) => setCurrentTab(tab)}
+                onOpenBedtime={() => setIsBedtimeModalOpen(true)}
               />
             )}
 
-            {currentTab === 'archivo' && (
+            {currentTab === 'recuerdos' && (
               <MemoriesView
                 memories={memories}
                 settings={settings}
-                onOpenNewMemory={() => {
-                  setMemoryToEdit(null);
-                  setPrefillPlanForMemory(null);
-                  setIsMemoryModalOpen(true);
-                }}
+                onOpenNewMemory={tryOpenNewMemory}
                 onEditMemory={(mem) => {
                   setMemoryToEdit(mem);
                   setPrefillPlanForMemory(null);
@@ -496,6 +702,30 @@ export function App() {
                 }}
                 onDeleteMemory={handleDeleteMemory}
                 selectedMemoryId={selectedMemoryId}
+              />
+            )}
+
+            {currentTab === 'rincones' && (
+              <PlacesView
+                places={places}
+                settings={settings}
+                onOpenNewPlace={tryOpenNewPlace}
+                onEditPlace={(place) => {
+                  setPlaceToEdit(place);
+                  setIsPlaceModalOpen(true);
+                }}
+                onDeletePlace={handleDeletePlace}
+                onToggleStatus={handleTogglePlaceStatus}
+              />
+            )}
+
+            {currentTab === 'capsulas' && (
+              <TimeCapsulesView
+                capsules={capsules}
+                settings={settings}
+                onOpenNewCapsule={tryOpenNewCapsule}
+                onDeleteCapsule={handleDeleteCapsule}
+                onOpenCapsuleContent={handleOpenCapsuleContent}
               />
             )}
 
@@ -516,42 +746,42 @@ export function App() {
               />
             )}
 
-            {currentTab === 'rincones' && (
-              <PlacesView
-                places={places}
-                settings={settings}
-                onOpenNewPlace={() => {
-                  setPlaceToEdit(null);
-                  setIsPlaceModalOpen(true);
-                }}
-                onEditPlace={(place) => {
-                  setPlaceToEdit(place);
-                  setIsPlaceModalOpen(true);
-                }}
-                onDeletePlace={handleDeletePlace}
-                onToggleStatus={handleTogglePlaceStatus}
-              />
-            )}
-
             {currentTab === 'ruleta' && (
-              <RouletteView
-                plans={plans}
-                onAcceptPlanChallenge={handleAcceptPlanChallenge}
-              />
+              <RouletteView plans={plans} onAcceptPlanChallenge={handleAcceptPlanChallenge} />
             )}
 
-            {currentTab === 'capsulas' && (
-              <TimeCapsulesView
-                capsules={capsules}
+            {currentTab === 'ajustes' && (
+              <SettingsView
                 settings={settings}
-                onOpenNewCapsule={() => setIsCapsuleModalOpen(true)}
-                onDeleteCapsule={handleDeleteCapsule}
-                onOpenCapsuleContent={handleOpenCapsuleContent}
+                session={userSession}
+                usage={usage}
+                notifications={notifications}
+                onUpdateNotifications={(prefs) => {
+                  saveNotificationSettings(prefs);
+                  setNotifications(prefs);
+                }}
+                onToggleDarkMode={() =>
+                  handleUpdateSettings({ ...settings, darkMode: !settings.darkMode })
+                }
+                onSwitchUserRole={(role) => handleUpdateSettings({ ...settings, currentUser: role })}
+                onOpenPairManage={() => setIsPairManageOpen(true)}
+                onOpenPaywall={() => setFlowStage('paywall')}
+                onOpenLegacySettings={() => setIsSettingsModalOpen(true)}
+                onLogout={handleLogout}
               />
             )}
           </motion.div>
         </AnimatePresence>
       </main>
+
+      {/* Floating Minimalist Bottom Navigation */}
+      <BottomNav
+        currentTab={currentTab}
+        onChangeTab={(tab) => {
+          setCurrentTab(tab);
+          setSelectedMemoryId(null);
+        }}
+      />
 
       {/* Realtime Incoming Kiss Alert */}
       <AnimatePresence>
@@ -560,42 +790,38 @@ export function App() {
             initial={{ opacity: 0, y: -40, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -40, scale: 0.95 }}
-            className="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-sm w-[92%] bg-butter border-3 border-carbon rounded-2xl p-3.5 shadow-neo-lg flex items-center justify-between gap-3"
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-sm w-[92%] bg-white dark:bg-[#181A20] border border-rose-200 dark:border-rose-900 rounded-3xl p-4 shadow-xl flex items-center justify-between gap-3"
           >
-            <div className="flex items-center gap-2.5">
-              <motion.span
-                animate={{ scale: [1, 1.25, 1], y: [0, -3, 0] }}
-                transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
-                className="text-2xl inline-block"
-              >
-                💋
-              </motion.span>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-rose-50 dark:bg-rose-950/60 flex items-center justify-center text-rose-500">
+                <Heart className="w-5 h-5 fill-current animate-pulse" />
+              </div>
               <div>
-                <p className="font-display font-black text-xs text-carbon">
-                  ¡{incomingKissAlert.senderName} te mandó un besito! ❤️
+                <p className="font-bold text-xs text-stone-900 dark:text-stone-100">
+                  ¡{incomingKissAlert.senderName} te mandó un besito!
                 </p>
-                <p className="text-[10px] text-carbon/70 font-semibold">
-                  "¡A la camita... que descanses bien!" 💤
+                <p className="text-[11px] text-stone-500 dark:text-stone-400">
+                  Recibido a las {incomingKissAlert.time}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-1.5 shrink-0">
               <button
                 type="button"
                 onClick={() => {
                   setIsBedtimeModalOpen(true);
                   setIncomingKissAlert(null);
                 }}
-                className="neo-btn-primary text-[10px] py-1 px-2.5 font-bold"
+                className="px-3 py-1.5 rounded-full bg-rose-500 text-white text-[11px] font-bold"
               >
-                Ver 🐭
+                Ver
               </button>
               <button
                 type="button"
                 onClick={() => setIncomingKissAlert(null)}
-                className="p-1 rounded-lg border border-carbon hover:bg-carbon/10 transition-colors"
+                className="p-1.5 rounded-full text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800"
               >
-                <X className="w-3.5 h-3.5 text-carbon" />
+                <X className="w-4 h-4" />
               </button>
             </div>
           </motion.div>
@@ -606,88 +832,53 @@ export function App() {
       <AnimatePresence>
         {completedPlanUndo && (
           <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            initial={{ opacity: 0, y: 40, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 50, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-            className="fixed bottom-24 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-md w-[92%] bg-butter border-3 border-carbon rounded-2xl p-3.5 shadow-neo-lg flex items-center justify-between gap-3"
+            exit={{ opacity: 0, y: 40, scale: 0.95 }}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 max-w-md w-[92%] bg-stone-900 text-white rounded-2xl p-3.5 shadow-xl flex items-center justify-between gap-3"
           >
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🎉</span>
-              <p className="font-display font-bold text-xs text-carbon leading-tight">
-                Cita <strong>"{completedPlanUndo.plan.title}"</strong> marcada como vivida.
-              </p>
-            </div>
+            <p className="font-semibold text-xs leading-tight">
+              Cita <strong>"{completedPlanUndo.plan.title}"</strong> marcada como vivida.
+            </p>
             <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={handleUndoCompletePlan}
-                className="neo-btn-primary text-xs py-1 px-3 font-bold"
+                className="px-3 py-1 rounded-full bg-rose-500 text-white text-xs font-bold"
               >
                 Deshacer
               </button>
               <button
                 type="button"
                 onClick={() => setCompletedPlanUndo(null)}
-                className="p-1 rounded-lg border border-carbon hover:bg-carbon/10 transition-colors"
-                title="Cerrar"
+                className="p-1 rounded-full hover:bg-white/10"
                 aria-label="Cerrar notificación"
               >
-                <X className="w-3.5 h-3.5 text-carbon" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Footer - With ample clearance for mobile floating navbar & safe-area */}
-      <footer className="border-t-2 border-carbon bg-white dark:bg-nightCard pt-6 pb-[max(7rem,calc(5.5rem+env(safe-area-inset-bottom,0px)))] sm:pb-8 px-4 text-center text-xs font-semibold text-carbon/70 dark:text-cream/70">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3.5">
-          <div className="flex items-center gap-2">
-            <span className="font-display font-black text-carbon dark:text-cream text-sm">
-              Sempiterno
-            </span>
-            <span>•</span>
-            <span>Para toda la vida</span>
-          </div>
-
-          <motion.div
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.98 }}
-            className="inline-flex items-center gap-1.5 text-xs bg-rosePastel-light/70 dark:bg-nightSurface border-2 border-carbon px-3.5 py-1.5 rounded-2xl shadow-neo-sm select-none"
-          >
-            <span>Hecho con</span>
-            <Heart className="w-3.5 h-3.5 text-coral fill-coral inline animate-pulse" />
-            <span className="font-bold text-coral">solo para {settings.partner2?.name || 'Alexandra'} 🎀❤️</span>
-          </motion.div>
-
-          <div className="flex items-center gap-3 sm:gap-4 flex-wrap justify-center">
-            <button
-              type="button"
-              onClick={() => setIsBedtimeModalOpen(true)}
-              className="min-h-[36px] py-1 text-[11px] font-bold text-coral hover:underline inline-flex items-center"
-            >
-              "¡A la camita... a la camita!" 🐭💤
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsSettingsModalOpen(true)}
-              className="min-h-[36px] py-1 text-[11px] font-bold text-carbon/80 dark:text-cream/80 hover:underline flex items-center gap-1"
-            >
-              ⚙️ Ajustes
-            </button>
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              className="min-h-[36px] py-1 text-[11px] font-bold text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-1"
-            >
-              🔄 Recargar
-            </button>
-          </div>
-        </div>
-      </footer>
-
       {/* Modals */}
+      <PairManageModal
+        isOpen={isPairManageOpen}
+        session={userSession}
+        onClose={() => setIsPairManageOpen(false)}
+        onPairWithCode={handlePairWithCode}
+        onUnlink={handleUnlinkPartner}
+      />
+
+      <ThoughtModal
+        isOpen={isThoughtModalOpen}
+        partnerName={
+          settings.currentUser === 'Gigio' ? settings.partner2.name : settings.partner1.name
+        }
+        onClose={() => setIsThoughtModalOpen(false)}
+        onSendThought={handleSendThought}
+      />
+
       <MemoryModal
         isOpen={isMemoryModalOpen}
         onClose={() => {

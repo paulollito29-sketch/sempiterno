@@ -4,15 +4,15 @@
 
 @layer base {
   :root {
-    --bg-main: #FFFDF7;
-    --text-main: #181B23;
-    --ease-out-snappy: cubic-bezier(0.23, 1, 0.32, 1);
+    --bg-main: #FAF8F5;
+    --text-main: #1C1917;
+    --ease-out-snappy: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   }
   
   .dark {
-    --bg-main: #181B23;
-    --text-main: #FFFDF7;
+    --bg-main: #0F1015;
+    --text-main: #F5F5F4;
   }
 
   html, body {
@@ -27,95 +27,119 @@
     color: var(--text-main);
     overflow-x: hidden;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
-  /* Accessible focus rings */
   :focus-visible {
-    outline: 2px solid #FF6E61;
+    outline: 2px solid #E17068;
     outline-offset: 2px;
   }
 }
 
-/* Custom Neo-Brutalist utility classes with Emil Kowalski motion craft */
-@layer components {
-  .neo-box {
-    @apply border-2 border-carbon bg-white rounded-2xl shadow-neo;
-    transition: transform 180ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 180ms cubic-bezier(0.23, 1, 0.32, 1), background-color 180ms ease;
-  }
-  
-  .neo-box-dark {
-    @apply border-2 border-carbon bg-white dark:bg-nightSurface dark:border-cream/40 rounded-2xl shadow-neo dark:shadow-neo-dark;
-    transition: transform 180ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 180ms cubic-bezier(0.23, 1, 0.32, 1), background-color 180ms ease;
-  }
-
-  .neo-btn {
-    @apply border-2 border-carbon rounded-xl font-bold shadow-neo select-none touch-manipulation;
-    transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 160ms cubic-bezier(0.23, 1, 0.32, 1), background-color 160ms ease;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .neo-btn:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 6px 6px 0px #181B23;
-    }
-  }
-
-  .neo-btn:active:not(:disabled) {
-    transform: scale(0.97) translate(1px, 1px);
-    box-shadow: 2px 2px 0px #181B23;
-  }
-
-  .neo-btn:disabled {
-    @apply opacity-50 cursor-not-allowed shadow-neo transform-none;
-  }
-
-  .neo-btn-primary {
-    @apply neo-btn bg-coral text-white hover:bg-coral-hover active:bg-coral-dark;
-  }
-
-  .neo-btn-secondary {
-    @apply neo-btn bg-butter text-carbon hover:bg-butter-dark;
-  }
-
-  .neo-btn-rose {
-    @apply neo-btn bg-rosePastel text-carbon hover:bg-rosePastel-dark;
-  }
-
-  .neo-btn-white {
-    @apply neo-btn bg-white dark:bg-nightCard text-carbon dark:text-cream hover:bg-cream dark:hover:bg-nightSurface;
-  }
-
-  .neo-badge {
-    @apply border-2 border-carbon font-semibold text-xs px-2.5 py-1 rounded-full shadow-neo-sm;
-  }
-
-  .neo-input {
-    @apply border-2 border-carbon rounded-xl px-3.5 py-2.5 bg-white dark:bg-nightCard text-carbon dark:text-cream shadow-neo-sm focus:outline-none focus:ring-2 focus:ring-coral;
-    transition: border-color 140ms ease, box-shadow 140ms ease;
-  }
+.serif-title {
+  font-family: 'Playfair Display', serif;
 }
 
-/* Custom Polaroid Font */
 .font-handwriting {
   font-family: 'Caveat', cursive;
 }
 
-/* Smooth custom scrollbars */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Minimalist Soft-Elevation Components (preserving legacy class names for backward compatibility) */
+@layer components {
+  .neo-box {
+    @apply border border-stone-200/75 bg-white rounded-3xl shadow-sm;
+    transition: transform 200ms var(--ease-out-snappy), box-shadow 200ms var(--ease-out-snappy), background-color 180ms ease;
+  }
+  
+  .neo-box-dark {
+    @apply border border-stone-200/75 bg-white dark:bg-[#181A20] dark:border-stone-800 rounded-3xl shadow-sm;
+    transition: transform 200ms var(--ease-out-snappy), box-shadow 200ms var(--ease-out-snappy), background-color 180ms ease;
+  }
+
+  .neo-btn {
+    @apply rounded-2xl font-semibold select-none touch-manipulation shadow-sm;
+    transition: transform 160ms var(--ease-out-snappy), box-shadow 160ms var(--ease-out-snappy), background-color 160ms ease, opacity 160ms ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .neo-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+  }
+
+  .neo-btn:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  .neo-btn:disabled {
+    @apply opacity-50 cursor-not-allowed transform-none;
+  }
+
+  .neo-btn-primary {
+    @apply neo-btn bg-rose-500 text-white hover:bg-rose-600 shadow-sm shadow-rose-500/20;
+  }
+
+  .neo-btn-secondary {
+    @apply neo-btn bg-amber-100 text-stone-900 hover:bg-amber-200;
+  }
+
+  .neo-btn-rose {
+    @apply neo-btn bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300;
+  }
+
+  .neo-btn-white {
+    @apply neo-btn bg-white border border-stone-200/80 dark:bg-[#20222A] dark:border-stone-700 text-stone-800 dark:text-stone-100 hover:bg-stone-50 dark:hover:bg-stone-800;
+  }
+
+  .neo-badge {
+    @apply border border-stone-200/70 dark:border-stone-700 font-semibold text-xs px-2.5 py-1 rounded-full bg-white/90 dark:bg-stone-800/80 shadow-sm;
+  }
+
+  .neo-input {
+    @apply border border-stone-200/90 dark:border-stone-700 rounded-2xl px-3.5 py-2.5 bg-stone-50/70 dark:bg-[#20222A] text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500;
+    transition: border-color 140ms ease, box-shadow 140ms ease;
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: #f1ede3;
+/* Micro-interactions */
+@keyframes gentlePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
 }
 
-.dark ::-webkit-scrollbar-track {
-  background: #1e222d;
+.pulse-heart {
+  animation: gentlePulse 2.2s ease-in-out infinite;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #FF6E61;
-  border-radius: 9999px;
-  border: 2px solid #181B23;
+@keyframes rippleAnim {
+  0% { transform: scale(0.7); opacity: 0.9; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+.ripple-effect {
+  animation: rippleAnim 0.75s ease-out forwards;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Subtle custom scrollbars for desktop */
+@media (min-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(225, 112, 104, 0.35);
+    border-radius: 9999px;
+  }
 }

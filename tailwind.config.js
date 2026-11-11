@@ -8,21 +8,24 @@ export default {
   theme: {
     extend: {
       colors: {
-        cream: '#FFFDF7',
-        night: '#181B23',
-        nightSurface: '#222631',
-        nightCard: '#2A2F3D',
-        carbon: '#181B23',
+        cream: '#FAF8F5',
+        bone: '#FAF8F5',
+        night: '#0F1015',
+        nightSurface: '#181A20',
+        nightCard: '#20222A',
+        carbon: '#1C1917',
+        terracotta: '#E17068',
+        blush: '#F4A5A5',
         coral: {
-          DEFAULT: '#FF6E61',
-          hover: '#FA5A4C',
-          light: '#FF887D',
-          dark: '#E05347',
+          DEFAULT: '#E17068',
+          hover: '#D45C54',
+          light: '#F4A5A5',
+          dark: '#C04840',
         },
         rosePastel: {
-          DEFAULT: '#FFB5A7',
-          light: '#FFD6CE',
-          dark: '#F89684',
+          DEFAULT: '#F4A5A5',
+          light: '#FCE7E7',
+          dark: '#E17068',
         },
         butter: {
           DEFAULT: '#FDE68A',
@@ -34,7 +37,8 @@ export default {
         lavender: '#E2D4F0',
       },
       fontFamily: {
-        display: ['"Space Grotesk"', 'sans-serif'],
+        display: ['"Plus Jakarta Sans"', 'sans-serif'],
+        serif: ['"Playfair Display"', 'serif'],
         sans: ['"Plus Jakarta Sans"', 'sans-serif'],
       },
       boxShadow: {

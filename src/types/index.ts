@@ -117,3 +117,39 @@ export interface KissesData {
   lastSenderName: string;
   lastKissAt: string;
 }
+
+export type SubscriptionPlan = 'free' | 'monthly' | 'annual';
+export type AuthProviderType = 'google' | 'apple' | 'email' | 'guest';
+
+export interface UserSession {
+  id: string;
+  email?: string;
+  name: string;
+  avatarUrl?: string;
+  provider: AuthProviderType;
+  myCode: string; // e.g., SEMP-7492
+  coupleId: string; // shared id between both partners
+  pairedPartnerName?: string;
+  isPaired: boolean;
+}
+
+export interface CoupleThought {
+  id: string;
+  senderName: string;
+  senderRole: 'Gigio' | 'Rosita';
+  text: string;
+  createdAt: string;
+}
+
+export interface NotificationSettings {
+  kissesAndTouches: boolean;
+  hapticsEnabled: boolean;
+  dailyThoughtReminder: boolean;
+}
+
+export const FREE_PLAN_LIMITS = {
+  maxMemories: 10,
+  maxPlaces: 5,
+  maxCapsules: 1,
+} as const;
+

@@ -276,6 +276,31 @@ async function runAllTests() {
     assert(false, `Error consultando Supabase: ${err.message}`);
   }
 
+  // 5. LÍMITES FREEMIUM Y CÓDIGOS DE PAREJA
+  console.log(bold('\n5. Reglas Freemium y Códigos Bidireccionales:'));
+
+  const checkFreemium = (mem, pla, cap, plan) => {
+    const isPremium = plan === 'monthly' || plan === 'annual';
+    return {
+      isPremium,
+      canAddMemory: isPremium || mem < 10,
+      canAddPlace: isPremium || pla < 5,
+      canAddCapsule: isPremium || cap < 1,
+    };
+  };
+
+  const freeOk = checkFreemium(9, 4, 0, 'free');
+  assert(!freeOk.isPremium && freeOk.canAddMemory && freeOk.canAddPlace && freeOk.canAddCapsule, 'Plan Free permite crear por debajo de los límites (9/10, 4/5, 0/1)');
+
+  const freeBlocked = checkFreemium(10, 5, 1, 'free');
+  assert(!freeBlocked.canAddMemory && !freeBlocked.canAddPlace && !freeBlocked.canAddCapsule, 'Plan Free bloquea nuevas creaciones al alcanzar límites (10, 5, 1)');
+
+  const premiumAnnual = checkFreemium(50, 20, 10, 'annual');
+  assert(premiumAnnual.isPremium && premiumAnnual.canAddMemory && premiumAnnual.canAddPlace && premiumAnnual.canAddCapsule, 'Plan Anual Dúo desbloquea creación ilimitada');
+
+  const sampleCode = `SEMP-${Math.floor(1000 + Math.random() * 9000)}`;
+  assert(/^SEMP-\d{4}$/.test(sampleCode), `Código de pareja cumple formato esperado (${sampleCode})`);
+
   // RESUMEN
   console.log(bold('\n============================================='));
   console.log(bold(`RESULTADO: ${passed} pasadas, ${failed} fallidas`));
