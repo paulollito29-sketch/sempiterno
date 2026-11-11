@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sempiterno Mobile - Complete Interactive Mockup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;1,400;1,600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #0d0e12;
+      color: #1c1917;
+      margin: 0;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .serif-title {
+      font-family: 'Playfair Display', serif;
+    }
+    /* Phone Frame */
+    .phone-chassis {
+      width: 390px;
+      height: 844px;
+      background: #FAF8F5;
+      border-radius: 54px;
+      box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.85), 0 0 0 12px #202127, 0 0 0 14px #3d3f4d;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+    .dynamic-island {
+      width: 122px;
+      height: 32px;
+      background: #000;
+      border-radius: 20px;
+      margin: 10px auto 0 auto;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+    }
+    /* Screens / Views */
+    .view-screen {
+      position: absolute;
+      inset: 0;
+      background: #FAF8F5;
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.98) translateY(10px);
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .view-screen.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1) translateY(0);
+    }
+    /* Tab Transitions */
+    .tab-content {
+      display: none;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.25s ease-out, transform 0.25s ease-out;
+    }
+    .tab-content.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    /* Pulse & Ripple */
+    @keyframes gentlePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+    }
+    .pulse-heart {
+      animation: gentlePulse 2.2s ease-in-out infinite;
+    }
+    @keyframes rippleAnim {
+      0% { transform: scale(0.7); opacity: 1; }
+      100% { transform: scale(2.6); opacity: 0; }
+    }
+    .ripple-effect {
+      position: absolute;
+      border-radius: 9999px;
+      background: rgba(225, 112, 104, 0.38);
+      animation: rippleAnim 0.75s ease-out forwards;
+      pointer-events: none;
+    }
+    /* Modals */
+    .sheet-modal {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(4px);
+      z-index: 60;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .sheet-modal.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .sheet-panel {
+      background: #FFFFFF;
+      border-top-left-radius: 36px;
+      border-top-right-radius: 36px;
+      padding: 24px;
+      transform: translateY(100%);
+      transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .sheet-modal.active .sheet-panel {
+      transform: translateY(0);
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body>
+
+  <!-- Controls & Header -->
+  <div class="text-center mb-6 text-stone-300 max-w-md">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-stone-800 text-xs text-rose-300 font-medium tracking-wide mb-2">
+      <span class="w-2 h-2 rounded-full bg-rose-400 animate-ping"></span>
+      INSPIRA DESIGN &bull; MINIMALIST MOCKUP
+    </div>
+    <h1 class="text-2xl font-bold tracking-tight text-white">Sempiterno Native App</h1>
+    <p class="text-xs text-stone-400 mt-1">
+      Prueba cambiar entre <b>Login</b>, <b>Emparejamiento de Pareja</b> y <b>Ajustes</b> con los botones de abajo o dentro del teléfono.
+    </p>
+
+    <!-- Quick Switcher Bar -->
+    <div class="flex items-center justify-center gap-2 mt-4 flex-wrap">
+      <button onclick="goToScreen('screen-login')" class="px-3 py-1.5 rounded-full bg-stone-800 hover:bg-stone-700 text-xs font-semibold text-stone-200 transition-colors">
+        1. Login
+      </button>
+      <button onclick="goToScreen('screen-pair')" class="px-3 py-1.5 rounded-full bg-stone-800 hover:bg-stone-700 text-xs font-semibold text-stone-200 transition-colors">
+        2. Código Pareja
+      </button>
+      <button onclick="goToScreen('screen-paywall')" class="px-3 py-1.5 rounded-full bg-amber-600 hover:bg-amber-500 text-xs font-semibold text-white transition-colors">
+        3. Planes & Free 7 Días
+      </button>
+      <button onclick="goToScreen('screen-main')" class="px-3 py-1.5 rounded-full bg-rose-600 hover:bg-rose-500 text-xs font-semibold text-white transition-colors">
+        4. App Principal
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Device Chassis -->
+  <div class="phone-chassis">
+    <!-- Status Bar & Dynamic Island -->
+    <div class="pt-2 px-6 flex justify-between items-center text-[12px] font-semibold text-stone-800 z-50 pointer-events-none">
+      <span>9:41</span>
+      <div class="dynamic-island">
+        <span class="w-2.5 h-2.5 rounded-full bg-stone-900"></span>
+        <div class="flex items-center gap-1">
+          <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+          <span class="text-[9px] text-stone-400">Sempiterno</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5 text-stone-700">
+        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.22 19.67 10.57 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9z"/></svg>
+        <span class="text-[10px]">5G</span>
+        <div class="w-5 h-2.5 border border-stone-800 rounded-sm p-0.5 flex items-center">
+          <div class="h-full w-3/4 bg-stone-800 rounded-2xs"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==============================================
+         SCREEN 1: LOGIN & ONBOARDING (MINIMALIST)
+         ============================================== -->
+    <div id="screen-login" class="view-screen">
+      <div class="flex-1 flex flex-col justify-between px-7 pt-12 pb-10">
+        <!-- Brand & Logo -->
+        <div class="text-center mt-6">
+          <!-- Minimalist Vector Logo (Infinity Heart Inspira) -->
+          <div class="w-20 h-20 mx-auto mb-4 rounded-3xl bg-gradient-to-tr from-stone-900 to-stone-800 shadow-xl flex items-center justify-center p-4 relative overflow-hidden">
+            <div class="absolute -top-4 -right-4 w-12 h-12 bg-rose-500/20 rounded-full blur-xl"></div>
+            <svg class="w-12 h-12 text-rose-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+              <!-- Infinity Couple Knot Heart -->
+              <path d="M30 60 C 15 45, 15 25, 33 25 C 43 25, 48 35, 50 42 C 52 35, 57 25, 67 25 C 85 25, 85 45, 70 60 L 50 80 Z" stroke="url(#roseGrad)" fill="rgba(225, 112, 104, 0.08)"/>
+              <defs>
+                <linearGradient id="roseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#F4A5A5"/>
+                  <stop offset="100%" stop-color="#E17068"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+
+          <span class="text-[11px] font-bold tracking-[0.25em] text-rose-500 uppercase">Sempiterno Duo</span>
+          <h2 class="serif-title text-3xl font-bold text-stone-900 mt-1">El espacio íntimo<br><span class="italic font-normal">de su amor</span></h2>
+          <p class="text-xs text-stone-400 mt-2 max-w-xs mx-auto leading-relaxed">
+            Guarda recuerdos, comparte tus pensamientos diarios y envíense caricias en tiempo real.
+          </p>
+        </div>
+
+        <!-- Auth Form -->
+        <div class="space-y-3 w-full">
+          <!-- Google Auth Button -->
+          <button onclick="goToScreen('screen-pair')" class="w-full py-3.5 px-4 rounded-2xl bg-white border border-stone-200/80 shadow-xs flex items-center justify-center gap-3 text-xs font-bold text-stone-800 hover:bg-stone-50 active:scale-98 transition-all">
+            <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/><path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8s.2-2.1.4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"/><path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2-6.4-4.8L1.9 16.4C3.7 20.4 7.5 23 12 23z"/></svg>
+            <span>Continuar con Google</span>
+          </button>
+
+          <!-- Apple Auth Button -->
+          <button onclick="goToScreen('screen-pair')" class="w-full py-3.5 px-4 rounded-2xl bg-stone-900 text-white shadow-xs flex items-center justify-center gap-3 text-xs font-bold hover:bg-stone-800 active:scale-98 transition-all">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.39c.62-.75 1.04-1.8 0.93-2.85-.9.04-1.99.6-2.63 1.35-.57.65-1.07 1.72-.94 2.74 1.01.08 2.02-.49 2.64-1.24z"/></svg>
+            <span>Continuar con Apple</span>
+          </button>
+
+          <!-- Divider -->
+          <div class="relative py-2 flex items-center justify-center">
+            <div class="w-full border-t border-stone-200"></div>
+            <span class="absolute bg-[#FAF8F5] px-3 text-[10px] font-semibold text-stone-400 uppercase tracking-widest">o con correo</span>
+          </div>
+
+          <!-- Email Input -->
+          <div>
+            <input type="email" placeholder="tucorreo@ejemplo.com" class="w-full px-4 py-3.5 rounded-2xl bg-white border border-stone-200/80 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500">
+          </div>
+
+          <button onclick="goToScreen('screen-pair')" class="w-full py-3.5 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs shadow-md shadow-rose-500/20 active:scale-98 transition-all">
+            Ingresar con Enlace Mágico
+          </button>
+        </div>
+
+        <p class="text-[10px] text-stone-400 text-center">
+          Al entrar aceptas los Términos de Pareja y Privacidad Cifrada.
+        </p>
+      </div>
+    </div>
+
+
+    <!-- ==============================================
+         SCREEN 2: VINCULACIÓN DE PAREJA (PAIRING CODE)
+         ============================================== -->
+    <div id="screen-pair" class="view-screen">
+      <div class="flex-1 flex flex-col justify-between px-7 pt-12 pb-10 overflow-y-auto no-scrollbar">
+        <!-- Header -->
+        <div>
+          <button onclick="goToScreen('screen-login')" class="inline-flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-700 font-medium mb-6">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            Cerrar Sesión
+          </button>
+
+          <span class="text-[11px] font-bold tracking-widest text-rose-500 uppercase">Paso 2 &bull; Conexión</span>
+          <h2 class="serif-title text-3xl font-bold text-stone-900 mt-1">Conecta con<br><span class="italic font-normal">tu pareja</span></h2>
+          <p class="text-xs text-stone-400 mt-2 leading-relaxed">
+            Para sincronizar sus fotos y pensamientos, ambos deben compartir el mismo código de pareja.
+          </p>
+        </div>
+
+        <!-- Option A: Share Your Code -->
+        <div class="my-6 space-y-4">
+          <div class="p-5 rounded-3xl bg-white border border-stone-200/70 shadow-sm relative overflow-hidden">
+            <span class="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Tu Código de Invitación</span>
+            <div class="flex items-center justify-between mt-2">
+              <span id="myShareCode" class="font-mono text-2xl font-extrabold tracking-widest text-stone-800">SEMP-7492</span>
+              <button onclick="copyCode()" class="px-3.5 py-1.5 rounded-full bg-stone-900 text-white text-[11px] font-bold shadow-xs active:scale-95 transition-transform flex items-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                <span id="copyBtnText">Copiar</span>
+              </button>
+            </div>
+            <p class="text-[11px] text-stone-400 mt-2">Pásale este código a tu pareja para que lo ingrese en su teléfono.</p>
+          </div>
+
+          <!-- Divider -->
+          <div class="relative py-1 flex items-center justify-center">
+            <div class="w-full border-t border-stone-200"></div>
+            <span class="absolute bg-[#FAF8F5] px-3 text-[10px] font-semibold text-stone-400 uppercase tracking-widest">o si ella ya te dio uno</span>
+          </div>
+
+          <!-- Option B: Enter Partner's Code -->
+          <div class="p-5 rounded-3xl bg-white border border-stone-200/70 shadow-sm">
+            <span class="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Ingresar Código de tu Pareja</span>
+            <div class="mt-2 flex gap-2">
+              <input type="text" id="partnerCodeInput" placeholder="Ej: SEMP-1234" class="flex-1 uppercase font-mono px-4 py-3 rounded-2xl bg-stone-50 border border-stone-200 text-sm font-bold text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500">
+              <button onclick="linkWithPartner()" class="px-4 py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold active:scale-95 transition-all">
+                Vincular
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Continue Button -->
+        <button onclick="goToScreen('screen-paywall')" class="w-full py-4 rounded-2xl bg-stone-900 text-white font-bold text-xs shadow-md active:scale-98 transition-all flex items-center justify-center gap-2">
+          <span>Continuar a Planes</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </button>
+      </div>
+    </div>
+
+
+    <!-- ==============================================
+         SCREEN 2.5: PAYWALL (PLANES DE PAGO & FREE 7 DÍAS)
+         ============================================== -->
+    <div id="screen-paywall" class="view-screen">
+      <div class="flex-1 flex flex-col justify-between px-6 pt-10 pb-8 overflow-y-auto no-scrollbar">
+        <!-- Header -->
+        <div>
+          <button onclick="goToScreen('screen-pair')" class="inline-flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-700 font-medium mb-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            Atrás
+          </button>
+
+          <div class="text-center">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-600 text-[10px] font-bold tracking-wider uppercase mb-2">
+              <span>&hearts;</span> Plan para dos personas
+            </span>
+            <h2 class="serif-title text-2xl font-bold text-stone-900">Sempiterno Duo</h2>
+            <p class="text-xs text-stone-500 mt-1">
+              Un único plan cubre a <b>ambos</b>. Todos los recuerdos, toques y cápsulas sin límite.
+            </p>
+          </div>
+        </div>
+
+        <!-- Pricing Cards -->
+        <div class="my-4 space-y-3">
+          <!-- Plan Anual (Destacado) -->
+          <div onclick="selectPlan('annual')" id="card-plan-annual" class="p-4 rounded-3xl bg-white border-2 border-rose-500 shadow-md relative cursor-pointer active:scale-98 transition-all">
+            <div class="absolute -top-3 right-4 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-rose-500 to-rose-600 text-white text-[9px] font-extrabold uppercase tracking-wider shadow-xs">
+              Ahorra 50% &bull; Más elegido
+            </div>
+            <div class="flex items-center justify-between">
+              <div>
+                <h4 class="text-xs font-bold text-stone-900 uppercase tracking-wider">Plan Anual Dúo</h4>
+                <p class="text-[11px] text-stone-400 mt-0.5">Facturado $29.99 al año</p>
+              </div>
+              <div class="text-right">
+                <span class="text-xl font-extrabold text-stone-900">$2.49</span>
+                <span class="text-[10px] text-stone-500 block -mt-1">/ mes</span>
+              </div>
+            </div>
+            <div class="mt-2.5 pt-2.5 border-t border-stone-100 flex items-center justify-between text-[11px] text-rose-600 font-semibold">
+              <span>Incluye 7 días gratis</span>
+              <span class="text-stone-400 font-normal">Para los dos</span>
+            </div>
+          </div>
+
+          <!-- Plan Mensual -->
+          <div onclick="selectPlan('monthly')" id="card-plan-monthly" class="p-4 rounded-3xl bg-white border border-stone-200 shadow-xs relative cursor-pointer active:scale-98 transition-all">
+            <div class="flex items-center justify-between">
+              <div>
+                <h4 class="text-xs font-bold text-stone-800 uppercase tracking-wider">Plan Mensual Dúo</h4>
+                <p class="text-[11px] text-stone-400 mt-0.5">Cancela cuando quieras</p>
+              </div>
+              <div class="text-right">
+                <span class="text-xl font-extrabold text-stone-900">$4.99</span>
+                <span class="text-[10px] text-stone-500 block -mt-1">/ mes</span>
+              </div>
+            </div>
+            <div class="mt-2.5 pt-2.5 border-t border-stone-100 flex items-center justify-between text-[11px] text-stone-600">
+              <span>Cobro mes a mes</span>
+              <span class="text-stone-400">Para los dos</span>
+            </div>
+          </div>
+
+          <!-- Comparison Card: Free vs Premium -->
+          <div class="p-4 rounded-3xl bg-stone-50 border border-stone-200/80 text-[11px] space-y-2.5">
+            <div class="flex items-center justify-between pb-2 border-b border-stone-200 text-stone-400 font-bold uppercase text-[9px] tracking-wider">
+              <span>Característica</span>
+              <div class="flex gap-4">
+                <span class="w-12 text-center text-stone-500">Free</span>
+                <span class="w-16 text-center text-rose-600 font-bold">Premium</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-stone-700">
+              <span>Recuerdos compartidos</span>
+              <div class="flex gap-4 text-[10px]">
+                <span class="w-12 text-center text-stone-500">Hasta 10</span>
+                <span class="w-16 text-center font-bold text-rose-600">Ilimitados</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-stone-700">
+              <span>Calidad de fotos</span>
+              <div class="flex gap-4 text-[10px]">
+                <span class="w-12 text-center text-stone-500">Estándar</span>
+                <span class="w-16 text-center font-bold text-rose-600">Ultra HD</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-stone-700">
+              <span>Cápsulas del tiempo</span>
+              <div class="flex gap-4 text-[10px]">
+                <span class="w-12 text-center text-stone-500">Solo 1</span>
+                <span class="w-16 text-center font-bold text-rose-600">Ilimitadas</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-stone-700">
+              <span>Pensamientos y toques en vivo</span>
+              <div class="flex gap-4 text-[10px]">
+                <span class="w-12 text-center text-stone-500">Básicos</span>
+                <span class="w-16 text-center font-bold text-rose-600">Tiempo Real</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-stone-700">
+              <span>Rincones y favoritos</span>
+              <div class="flex gap-4 text-[10px]">
+                <span class="w-12 text-center text-stone-500">Hasta 5</span>
+                <span class="w-16 text-center font-bold text-rose-600">Ilimitados</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="space-y-2">
+          <!-- Primary: Start with 7 days free trial -->
+          <button onclick="goToScreen('screen-main'); alert('¡Suscripción iniciada con 7 días de prueba gratuita para la pareja!')" class="w-full py-3.5 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs shadow-md shadow-rose-500/25 active:scale-98 transition-all text-center">
+            Comenzar 7 Días de Prueba Gratis
+          </button>
+
+          <!-- Free Tier Option: Continue 7 days free -->
+          <button onclick="goToScreen('screen-main')" class="w-full py-2.5 text-center text-xs font-semibold text-stone-500 hover:text-stone-800 transition-colors">
+            O continuar en Plan Free por 7 días →
+          </button>
+
+          <p class="text-[10px] text-stone-400 text-center">
+            $0 hoy. Sin compromiso, puedes cancelar en cualquier momento.
+          </p>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ==============================================
+         SCREEN 3: MAIN APP (AUTHENTICATED & PAIRED)
+         ============================================== -->
+    <div id="screen-main" class="view-screen active">
+      <!-- Main Scrollable Screen Content -->
+      <div class="flex-1 overflow-y-auto no-scrollbar pb-24 pt-3 px-5">
+
+        <!-- TAB 1: INICIO -->
+        <div id="tab-home" class="tab-content active">
+          <!-- Top Couple Header -->
+          <div class="flex items-center justify-between mt-2">
+            <div class="flex items-center gap-3">
+              <!-- Paulo Avatar -->
+              <div class="relative">
+                <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-stone-200 to-rose-100 border-2 border-white shadow-sm flex items-center justify-center font-bold text-stone-700 text-sm">
+                  P
+                </div>
+                <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>
+              </div>
+              
+              <!-- Heart Link -->
+              <div class="text-rose-400 text-xs font-semibold tracking-wider uppercase flex items-center gap-1">
+                <span>&hearts;</span>
+              </div>
+
+              <!-- Alexandra Avatar -->
+              <div class="relative">
+                <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-rose-200 to-amber-100 border-2 border-white shadow-sm flex items-center justify-center font-bold text-rose-700 text-sm">
+                  A
+                </div>
+                <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>
+              </div>
+            </div>
+
+            <!-- Profile & Quick Pair Modal Trigger -->
+            <button onclick="openSheet('modal-pair-manage')" class="px-2.5 py-1 rounded-full bg-white border border-stone-200/80 shadow-xs flex items-center gap-1.5 text-[11px] font-semibold text-stone-600 active:scale-95 transition-transform">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              <span class="font-mono text-[10px]">SEMP-7492</span>
+            </button>
+          </div>
+
+          <!-- Days Counter Card (Hero) -->
+          <div class="mt-5 p-6 rounded-3xl bg-white border border-stone-200/50 shadow-sm relative overflow-hidden">
+            <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-rose-50/70 rounded-full blur-2xl pointer-events-none"></div>
+            <span class="text-[11px] font-semibold text-rose-500 uppercase tracking-widest">Juntos desde el primer día</span>
+            <div class="flex items-baseline gap-2 mt-1">
+              <span class="serif-title text-4xl font-semibold text-stone-900 tracking-tight" id="daysCount">538</span>
+              <span class="text-sm font-medium text-stone-500">días llenos de amor</span>
+            </div>
+            <p class="text-xs text-stone-400 mt-2 font-normal">Paulo & Alexandra &bull; 14 Nov 2024</p>
+            
+            <div class="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between text-xs text-stone-600">
+              <span>Próximo aniversario:</span>
+              <span class="font-semibold text-rose-600">en 18 días &bull; 1 año y 6 meses</span>
+            </div>
+          </div>
+
+          <!-- Live Mood / Daily Thought (What are you thinking?) -->
+          <div class="mt-4 p-5 rounded-3xl bg-gradient-to-br from-stone-900 to-stone-800 text-white shadow-md relative">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                <span class="text-[11px] font-medium tracking-wide uppercase text-stone-300">Pensamiento en vivo</span>
+              </div>
+              <span class="text-[10px] text-stone-400">Hace 12 min</span>
+            </div>
+            <p class="text-sm font-medium text-stone-100 leading-relaxed italic">
+              "Recordando cuando fuimos por ese café y te reíste de mi chiste tonto... te extraño mucho hoy &hearts;"
+            </p>
+            <div class="mt-3 flex items-center justify-between">
+              <span class="text-xs text-rose-300 font-semibold">— Alexandra (Rosita)</span>
+              <button onclick="openSheet('modal-thought')" class="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 text-xs text-stone-200 transition-colors flex items-center gap-1 active:scale-95">
+                <span>Responder</span>
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Interactive Kiss / Haptic Pulse Button (Obimy style) -->
+          <div class="mt-5 p-6 rounded-3xl bg-white border border-stone-200/60 shadow-sm text-center relative overflow-hidden">
+            <span class="text-xs font-semibold text-stone-400 uppercase tracking-wider block mb-1">Conexión Instantánea</span>
+            <h3 class="serif-title text-lg font-semibold text-stone-800 mb-4">Envía un beso o caricia</h3>
+            
+            <div class="relative inline-flex items-center justify-center">
+              <button id="kissButton" onclick="triggerKiss(event)" class="w-24 h-24 rounded-full bg-gradient-to-tr from-rose-500 to-rose-400 text-white shadow-lg shadow-rose-500/30 flex flex-col items-center justify-center active:scale-90 transition-transform duration-150 relative z-10">
+                <svg class="w-9 h-9 pulse-heart" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                <span class="text-[10px] font-bold uppercase tracking-wider mt-1">Tocar</span>
+              </button>
+            </div>
+
+            <p id="kissFeedback" class="text-xs text-stone-400 mt-4 transition-all duration-300">
+              Toca el corazón para enviar una vibración a su teléfono
+            </p>
+          </div>
+
+          <!-- Quick Navigation Shortcuts -->
+          <div class="grid grid-cols-2 gap-3 mt-4">
+            <div onclick="switchTab('tab-places')" class="p-4 rounded-2xl bg-white border border-stone-200/50 shadow-xs cursor-pointer active:scale-98 transition-transform">
+              <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              </div>
+              <span class="text-xs font-bold text-stone-800 block">Nuestros Rincones</span>
+              <span class="text-[11px] text-stone-400">14 lugares guardados</span>
+            </div>
+
+            <div onclick="switchTab('tab-capsules')" class="p-4 rounded-2xl bg-white border border-stone-200/50 shadow-xs cursor-pointer active:scale-98 transition-transform">
+              <div class="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mb-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
+              <span class="text-xs font-bold text-stone-800 block">Cápsulas del Tiempo</span>
+              <span class="text-[11px] text-stone-400">1 lista para abrir</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: RECUERDOS (MEMORIES) -->
+        <div id="tab-memories" class="tab-content">
+          <div class="flex items-center justify-between mt-2 mb-4">
+            <div>
+              <h2 class="serif-title text-2xl font-bold text-stone-900">Recuerdos</h2>
+              <p class="text-xs text-stone-400">Momentos que duran para siempre</p>
+            </div>
+            <button class="px-3.5 py-1.5 rounded-full bg-stone-900 text-white text-xs font-semibold shadow-xs flex items-center gap-1 active:scale-95 transition-transform">
+              <span>+</span> Nuevo
+            </button>
+          </div>
+
+          <!-- Memory Card 1 -->
+          <div class="rounded-3xl bg-white border border-stone-200/60 shadow-sm overflow-hidden mb-4">
+            <div class="relative h-56 bg-stone-100 overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=800&q=80" alt="Recuerdo" class="w-full h-full object-cover">
+              <div class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md text-[10px] font-semibold text-white">
+                24 Oct 2024
+              </div>
+              <div class="absolute bottom-3 left-3 flex items-center gap-1 text-rose-500 bg-white/90 backdrop-blur-md px-2 py-0.5 rounded-full text-xs font-bold">
+                &hearts; &hearts; &hearts; &hearts; &hearts;
+              </div>
+            </div>
+            <div class="p-4">
+              <h3 class="font-bold text-stone-900 text-base">Tardecita en el Mirador de Barranco</h3>
+              <p class="text-xs text-stone-500 mt-1 line-clamp-2">
+                Compramos churros calientes y nos sentamos a ver el atardecer mientras hablábamos del futuro.
+              </p>
+              <div class="mt-3 pt-3 border-t border-stone-100 flex items-center justify-between text-[11px] text-stone-400">
+                <span class="flex items-center gap-1 text-stone-600 font-medium">
+                  <svg class="w-3.5 h-3.5 text-rose-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                  Doble perspectiva incluida
+                </span>
+                <span>Mirador, Barranco</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: RINCONES (PLACES) -->
+        <div id="tab-places" class="tab-content">
+          <div class="flex items-center justify-between mt-2 mb-4">
+            <div>
+              <h2 class="serif-title text-2xl font-bold text-stone-900">Rincones</h2>
+              <p class="text-xs text-stone-400">Nuestros lugares especiales y pendientes</p>
+            </div>
+            <button class="px-3 py-1.5 rounded-full bg-stone-900 text-white text-xs font-semibold shadow-xs">+ Lugar</button>
+          </div>
+
+          <div class="space-y-3">
+            <div class="p-4 rounded-2xl bg-white border border-stone-200/60 shadow-xs flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center font-bold">☕</div>
+                <div>
+                  <h4 class="text-sm font-bold text-stone-900">Café Botánica</h4>
+                  <p class="text-[11px] text-stone-400">Plato fav: Tarta de pistacho</p>
+                </div>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-semibold">Visitado</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: CÁPSULAS (TIME CAPSULES) -->
+        <div id="tab-capsules" class="tab-content">
+          <div class="flex items-center justify-between mt-2 mb-4">
+            <div>
+              <h2 class="serif-title text-2xl font-bold text-stone-900">Cápsulas</h2>
+              <p class="text-xs text-stone-400">Mensajes sellados para el futuro</p>
+            </div>
+            <button class="px-3 py-1.5 rounded-full bg-stone-900 text-white text-xs font-semibold shadow-xs">+ Sellar</button>
+          </div>
+
+          <div class="p-5 rounded-3xl bg-gradient-to-br from-purple-900 to-stone-900 text-white shadow-md mb-4 relative overflow-hidden">
+            <div class="flex items-center justify-between mb-3">
+              <span class="px-2.5 py-0.5 rounded-full bg-rose-500/30 text-rose-300 text-[10px] font-semibold border border-rose-400/20">
+                ¡Lista para abrir!
+              </span>
+              <span class="text-xs text-purple-200">14 Feb 2026</span>
+            </div>
+            <h3 class="serif-title text-lg font-semibold">Para nuestro aniversario número 2</h3>
+            <p class="text-xs text-purple-200/80 mt-1">Escrita por Paulo con fotos nunca antes vistas.</p>
+          </div>
+        </div>
+
+        <!-- TAB 5: AJUSTES & CUENTA (SETTINGS) -->
+        <div id="tab-settings" class="tab-content">
+          <div class="mt-2 mb-4">
+            <h2 class="serif-title text-2xl font-bold text-stone-900">Ajustes</h2>
+            <p class="text-xs text-stone-400">Configuración de pareja y suscripción</p>
+          </div>
+
+          <!-- Freemium Status Card with Limits -->
+          <div class="p-5 rounded-3xl bg-white border border-stone-200/80 shadow-sm mb-4">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold tracking-wider uppercase bg-stone-100 text-stone-600 px-2.5 py-1 rounded-full">Plan Free Activo</span>
+              <span class="text-xs text-rose-600 font-semibold cursor-pointer" onclick="goToScreen('screen-paywall')">Subir de nivel →</span>
+            </div>
+            
+            <h3 class="text-base font-bold text-stone-900 mt-2">Límites del Plan Gratuito</h3>
+            <p class="text-xs text-stone-400 mt-0.5">Disfruta las funciones básicas o pásate a Premium para recuerdos y fotos ilimitadas.</p>
+
+            <div class="mt-3 space-y-2 text-xs">
+              <div>
+                <div class="flex justify-between text-[11px] text-stone-600 mb-1">
+                  <span>Recuerdos compartidos</span>
+                  <span class="font-bold">6 de 10 usados</span>
+                </div>
+                <div class="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                  <div class="w-[60%] h-full bg-rose-500 rounded-full"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-[11px] text-stone-600 mb-1">
+                  <span>Rincones guardados</span>
+                  <span class="font-bold">2 de 5 usados</span>
+                </div>
+                <div class="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                  <div class="w-[40%] h-full bg-amber-500 rounded-full"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-[11px] text-stone-600 mb-1">
+                  <span>Cápsulas del tiempo</span>
+                  <span class="font-bold text-rose-600">1 de 1 (Límite alcanzado)</span>
+                </div>
+                <div class="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                  <div class="w-full h-full bg-purple-500 rounded-full"></div>
+                </div>
+              </div>
+            </div>
+
+            <button onclick="goToScreen('screen-paywall')" class="mt-4 w-full py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 text-white text-xs font-bold shadow-sm shadow-rose-500/20 active:scale-98 transition-transform">
+              Desbloquear Premium Ilimitado ($2.49/mes)
+            </button>
+          </div>
+
+          <!-- Couple Code Section with Change / Unlink option -->
+          <div class="p-4 rounded-2xl bg-white border border-stone-200/60 shadow-xs mb-3">
+            <span class="text-[11px] font-semibold text-stone-400 uppercase tracking-wider">Espacio de Pareja</span>
+            <div class="flex items-center justify-between mt-1">
+              <div>
+                <span class="font-mono text-base font-bold text-stone-800">SEMP-7492</span>
+                <span class="text-[11px] text-emerald-600 font-medium block">&bull; Vinculado con Alexandra</span>
+              </div>
+              <button onclick="openSheet('modal-pair-manage')" class="px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 active:scale-95 transition-all">
+                Cambiar
+              </button>
+            </div>
+          </div>
+
+          <!-- Toggles -->
+          <div class="p-4 rounded-2xl bg-white border border-stone-200/60 shadow-xs space-y-3 text-xs text-stone-700 mb-4">
+            <div class="flex items-center justify-between">
+              <span>Notificaciones de besos y toques</span>
+              <input type="checkbox" checked class="accent-rose-500 w-4 h-4 rounded">
+            </div>
+            <div class="flex items-center justify-between">
+              <span>Vibración háptica</span>
+              <input type="checkbox" checked class="accent-rose-500 w-4 h-4 rounded">
+            </div>
+            <div class="flex items-center justify-between">
+              <span>Recordatorio diario de pensamiento</span>
+              <input type="checkbox" checked class="accent-rose-500 w-4 h-4 rounded">
+            </div>
+          </div>
+
+          <!-- Logout Button -->
+          <button onclick="goToScreen('screen-login')" class="w-full py-3.5 rounded-2xl bg-stone-100 hover:bg-rose-50 text-rose-600 text-xs font-bold flex items-center justify-center gap-2 active:scale-98 transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            <span>Cerrar Sesión</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Floating Minimalist Bottom Navigation Bar -->
+      <div class="absolute bottom-5 inset-x-5 z-40">
+        <nav class="bg-white/90 backdrop-blur-xl border border-stone-200/70 shadow-lg shadow-stone-900/5 rounded-full px-3 py-2 flex items-center justify-around">
+          
+          <!-- Tab 1 -->
+          <button onclick="switchTab('tab-home')" class="nav-item flex flex-col items-center gap-1 text-rose-600 py-1 px-3 transition-colors" data-target="tab-home">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            <span class="text-[9px] font-bold">Inicio</span>
+          </button>
+
+          <!-- Tab 2 -->
+          <button onclick="switchTab('tab-memories')" class="nav-item flex flex-col items-center gap-1 text-stone-400 py-1 px-3 transition-colors" data-target="tab-memories">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <span class="text-[9px] font-medium">Recuerdos</span>
+          </button>
+
+          <!-- Tab 3 -->
+          <button onclick="switchTab('tab-places')" class="nav-item flex flex-col items-center gap-1 text-stone-400 py-1 px-3 transition-colors" data-target="tab-places">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <span class="text-[9px] font-medium">Rincones</span>
+          </button>
+
+          <!-- Tab 4 -->
+          <button onclick="switchTab('tab-capsules')" class="nav-item flex flex-col items-center gap-1 text-stone-400 py-1 px-3 transition-colors" data-target="tab-capsules">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span class="text-[9px] font-medium">Cápsulas</span>
+          </button>
+
+          <!-- Tab 5 -->
+          <button onclick="switchTab('tab-settings')" class="nav-item flex flex-col items-center gap-1 text-stone-400 py-1 px-3 transition-colors" data-target="tab-settings">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <span class="text-[9px] font-medium">Ajustes</span>
+          </button>
+
+        </nav>
+      </div>
+    </div>
+
+
+    <!-- ==============================================
+         SHEET MODAL: GESTIÓN DE CÓDIGO DE PAREJA
+         ============================================== -->
+    <div id="modal-pair-manage" class="sheet-modal" onclick="if(event.target === this) closeSheet('modal-pair-manage')">
+      <div class="sheet-panel">
+        <div class="w-10 h-1 bg-stone-300 rounded-full mx-auto mb-4"></div>
+        <h3 class="serif-title text-xl font-bold text-stone-900">Vincular o Cambiar Código</h3>
+        <p class="text-xs text-stone-400 mt-1">Conecta a ambos teléfonos bajo la misma cuenta compartida.</p>
+
+        <!-- Current Code -->
+        <div class="mt-4 p-4 rounded-2xl bg-stone-50 border border-stone-200">
+          <span class="text-[10px] font-bold text-stone-400 uppercase">Tu código actual:</span>
+          <div class="flex items-center justify-between mt-1">
+            <span class="font-mono text-lg font-bold text-stone-800">SEMP-7492</span>
+            <button onclick="alert('Código copiado al portapapeles')" class="text-xs text-rose-600 font-bold">Copiar</button>
+          </div>
+        </div>
+
+        <!-- Enter New Code -->
+        <div class="mt-4">
+          <label class="text-xs font-semibold text-stone-700 block mb-1.5">Unirse con otro código de pareja</label>
+          <div class="flex gap-2">
+            <input type="text" placeholder="SEMP-XXXX" class="flex-1 uppercase font-mono px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-xs font-bold">
+            <button onclick="closeSheet('modal-pair-manage'); alert('¡Código actualizado con éxito!')" class="px-4 py-2.5 rounded-xl bg-stone-900 text-white text-xs font-bold">
+              Guardar
+            </button>
+          </div>
+        </div>
+
+        <!-- Unlink Button -->
+        <div class="mt-5 pt-3 border-t border-stone-100 flex items-center justify-between">
+          <button onclick="closeSheet('modal-pair-manage'); goToScreen('screen-pair')" class="text-xs font-semibold text-red-500 hover:text-red-700">
+            Desvincular pareja actual
+          </button>
+          <button onclick="closeSheet('modal-pair-manage')" class="text-xs font-semibold text-stone-500">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ==============================================
+         SHEET MODAL: ENVIAR PENSAMIENTO
+         ============================================== -->
+    <div id="modal-thought" class="sheet-modal" onclick="if(event.target === this) closeSheet('modal-thought')">
+      <div class="sheet-panel">
+        <div class="w-10 h-1 bg-stone-300 rounded-full mx-auto mb-4"></div>
+        <h3 class="serif-title text-xl font-bold text-stone-900">¿Qué estás pensando ahora?</h3>
+        <p class="text-xs text-stone-400 mt-1">Le llegará una notificación push instantánea a Alexandra.</p>
+
+        <textarea rows="3" placeholder="Escribe lo que sientes o un recuerdo bonito..." class="w-full mt-3 p-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20"></textarea>
+
+        <div class="mt-3 flex gap-2">
+          <button onclick="closeSheet('modal-thought'); alert('¡Pensamiento enviado con éxito!')" class="flex-1 py-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold active:scale-98 transition-all">
+            Enviar a mi Pareja
+          </button>
+          <button onclick="closeSheet('modal-thought')" class="px-4 py-3 rounded-xl bg-stone-100 text-stone-600 text-xs font-semibold">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Home Indicator (iOS Bar) -->
+    <div class="absolute bottom-1 inset-x-0 flex justify-center pointer-events-none z-50">
+      <div class="w-32 h-1 bg-stone-900/30 rounded-full"></div>
+    </div>
+  </div>
+
+  <script>
+    // Navigation between full screens (Login -> Pairing -> Main App)
+    function goToScreen(screenId) {
+      document.querySelectorAll('.view-screen').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById(screenId);
+      if (target) target.classList.add('active');
+    }
+
+    // Tab Switching inside Main App
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      const activeEl = document.getElementById(tabId);
+      if (activeEl) activeEl.classList.add('active');
+
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        const isTarget = btn.getAttribute('data-target') === tabId;
+        if (isTarget) {
+          btn.classList.add('text-rose-600');
+          btn.classList.remove('text-stone-400');
+          btn.querySelector('span').classList.add('font-bold');
+          btn.querySelector('span').classList.remove('font-medium');
+        } else {
+          btn.classList.remove('text-rose-600');
+          btn.classList.add('text-stone-400');
+          btn.querySelector('span').classList.remove('font-bold');
+          btn.querySelector('span').classList.add('font-medium');
+        }
+      });
+    }
+
+    // Sheet Modals
+    function openSheet(id) {
+      const modal = document.getElementById(id);
+      if (modal) modal.classList.add('active');
+    }
+    function closeSheet(id) {
+      const modal = document.getElementById(id);
+      if (modal) modal.classList.remove('active');
+    }
+
+    // Copy Code Simulation
+    function copyCode() {
+      const btnText = document.getElementById('copyBtnText');
+      btnText.textContent = '¡Copiado!';
+      setTimeout(() => { btnText.textContent = 'Copiar'; }, 2000);
+    }
+
+    // Link partner code (Bidirectional automatic pairing)
+    function linkWithPartner() {
+      const input = document.getElementById('partnerCodeInput');
+      if (!input.value.trim()) {
+        alert('Por favor escribe el código de tu pareja.');
+        return;
+      }
+      alert('¡Código ' + input.value.toUpperCase() + ' detectado! Conexión bidireccional establecida.');
+      goToScreen('screen-paywall');
+    }
+
+    // Plan selector
+    function selectPlan(type) {
+      const annual = document.getElementById('card-plan-annual');
+      const monthly = document.getElementById('card-plan-monthly');
+      if (type === 'annual') {
+        annual.className = 'p-4 rounded-3xl bg-white border-2 border-rose-500 shadow-md relative cursor-pointer active:scale-98 transition-all';
+        monthly.className = 'p-4 rounded-3xl bg-white border border-stone-200 shadow-xs relative cursor-pointer active:scale-98 transition-all';
+      } else {
+        monthly.className = 'p-4 rounded-3xl bg-white border-2 border-rose-500 shadow-md relative cursor-pointer active:scale-98 transition-all';
+        annual.className = 'p-4 rounded-3xl bg-white border border-stone-200 shadow-xs relative cursor-pointer active:scale-98 transition-all';
+      }
+    }
+
+    // Interactive Kiss Simulation
+    function triggerKiss(e) {
+      const btn = document.getElementById('kissButton');
+      const feedback = document.getElementById('kissFeedback');
+      
+      const ripple = document.createElement('div');
+      ripple.className = 'ripple-effect';
+      ripple.style.width = '140px';
+      ripple.style.height = '140px';
+      ripple.style.left = (btn.offsetLeft - 10) + 'px';
+      ripple.style.top = (btn.offsetTop - 10) + 'px';
+      btn.parentElement.appendChild(ripple);
+
+      setTimeout(() => ripple.remove(), 750);
+
+      feedback.textContent = '¡Beso enviado a Alexandra con vibración!';
+      feedback.className = 'text-xs text-rose-600 font-bold mt-4 animate-bounce';
+
+      setTimeout(() => {
+        feedback.textContent = 'Toca el corazón para enviar una vibración a su teléfono';
+        feedback.className = 'text-xs text-stone-400 mt-4 transition-all duration-300';
+      }, 2500);
+    }
+  </script>
+</body>
+</html>
