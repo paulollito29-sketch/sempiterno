@@ -113,6 +113,7 @@ HELP = (
     "/precio <id> <precio> [cantidad] — corrige el precio real de una ejecución\n"
     "/capital <USD> — capital que dedicas al bot\n"
     "/pausa · /reanudar — detener o retomar las compras nuevas\n"
+    "/emergencia — pausa y recomienda vender todo\n"
     "/ayuda — este mensaje"
 )
 
@@ -162,6 +163,7 @@ class TelegramBot:
             "/reanudar": "resume",
             "/precio": "set_price",
             "/capital": "set_capital",
+            "/emergencia": "kill",
         }
         if cmd in ("/ayuda", "/start", "/help"):
             reply = HELP

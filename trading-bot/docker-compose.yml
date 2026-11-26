@@ -1,0 +1,20 @@
+# Bot 24/7 en tu PC o en un VPS (~5 USD/mes). Requisitos: Docker + un archivo .env (copia .env.example).
+#   docker compose up -d --build          # inicia (se reinicia solo si se cae)
+#   docker compose logs -f engine         # ver qué hace
+#   docker compose run --rm engine cryptobot download    # bajar el histórico (primera vez)
+#   docker compose run --rm engine cryptobot research --profile lemon   # entrenar y validar
+services:
+  engine:
+    build: ./engine
+    env_file: .env
+    restart: unless-stopped
+    volumes:
+      - ./engine/data:/app/data
+      - ./engine/models:/app/models
+      - ./engine/reports:/app/reports
+    command: ["cryptobot", "run"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

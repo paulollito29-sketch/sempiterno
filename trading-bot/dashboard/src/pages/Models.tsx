@@ -50,15 +50,17 @@ function Importance({ values }: { values: Record<string, number> }) {
 }
 
 export function Models({ snap }: { snap: Snapshot }) {
-  const champion = snap.models.find((m) => m.status === 'champion') ?? snap.models[0]
+  const profile = snap.config?.cost_profile
+  const champion = snap.models.find((m) => m.status === 'champion' && m.cost_profile === profile) ?? snap.models.find((m) => m.status === 'champion') ?? snap.models[0]
   return (
     <div className="space-y-5">
-      <Card title="Modelos" subtitle="El campeón genera las recomendaciones; un retador solo lo reemplaza si mejora fuera de muestra.">
-        <Table head={['Versión', 'Estado', 'Puerta', 'Usa ML', 'Sharpe OOS', 'Creado']} empty={!snap.models.length}>
+      <Card title="Modelos" subtitle="Hay un campeón por perfil de costos: el de tu perfil genera las recomendaciones; un retador solo lo reemplaza si aprueba la puerta.">
+        <Table head={['Versión', 'Perfil', 'Estado', 'Puerta', 'Usa ML', 'Sharpe OOS', 'Creado']} empty={!snap.models.length}>
           {snap.models.map((m) => (
             <tr key={m.version}>
               <Td className="font-medium">{m.version}</Td>
-              <Td>{m.status}</Td>
+              <Td>{m.cost_profile}</Td>
+              <Td>{m.status === 'champion' ? 'campeón' : m.status === 'challenger' ? 'retador' : m.status}</Td>
               <Td>{m.gate?.passed ? <StatusPill tone="good">Aprobada</StatusPill> : <StatusPill tone="critical">No aprobada</StatusPill>}</Td>
               <Td>{m.uses_meta ? 'Sí' : 'No (regla)'}</Td>
               <Td>{num(m.oos_metrics?.sharpe)}</Td>

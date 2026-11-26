@@ -735,6 +735,7 @@ class BotApp:
             "resume": self.resume,
             "set_price": self.set_price,
             "set_capital": self.set_capital,
+            "kill": lambda *_: self.kill(),
         }
 
 
