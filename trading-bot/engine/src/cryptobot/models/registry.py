@@ -64,16 +64,28 @@ class ModelRegistry:
                 cards.append(ModelCard(**json.loads(f.read_text())))
         return cards
 
-    def champion_version(self) -> str | None:
-        f = self.root / "CHAMPION"
+    def _pointer(self, profile: str | None) -> Path:
+        return self.root / (f"CHAMPION_{profile}" if profile else "CHAMPION")
+
+    def champion_version(self, profile: str | None = None) -> str | None:
+        """Campeón del perfil de costos (un modelo de Binance nunca guía recomendaciones de Lemon)."""
+        f = self._pointer(profile)
+        if not f.exists() and profile is not None:
+            legacy = self._pointer(None)
+            if legacy.exists():
+                v = legacy.read_text().strip()
+                card = self._dir(v) / "card.json"
+                if card.exists() and json.loads(card.read_text()).get("cost_profile") == profile:
+                    return v
+            return None
         return f.read_text().strip() if f.exists() else None
 
-    def promote(self, version: str) -> None:
-        prev = self.champion_version()
+    def promote(self, version: str, profile: str | None = None) -> None:
+        prev = self.champion_version(profile)
         if prev and prev != version and (self._dir(prev) / "card.json").exists():
             self._set_status(prev, "retired")
         self._set_status(version, "champion")
-        (self.root / "CHAMPION").write_text(version)
+        self._pointer(profile).write_text(version)
 
     def _set_status(self, version: str, status: str) -> None:
         f = self._dir(version) / "card.json"
@@ -81,8 +93,8 @@ class ModelRegistry:
         data["status"] = status
         f.write_text(json.dumps(data, indent=2, ensure_ascii=False, default=str))
 
-    def load_champion(self) -> tuple[ModelCard, dict[str, Any]] | None:
-        v = self.champion_version()
+    def load_champion(self, profile: str | None = None) -> tuple[ModelCard, dict[str, Any]] | None:
+        v = self.champion_version(profile)
         if not v or not (self._dir(v) / "card.json").exists():
             return None
         return self.load(v)

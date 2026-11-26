@@ -139,19 +139,52 @@ def cmd_research(args: argparse.Namespace, settings: Settings) -> int:
         notes=f"campeón de la investigación: {d['champion']}",
     )
     registry.save(card, {"meta_model": model, "payoff": payoff, "report": d})
-    current = registry.load_champion()
+    current = registry.load_champion(profile)  # un campeón por perfil de costos
     if (
         current is None
         or (gate["passed"] and not current[0].gate.get("passed", False))
         or args.promote
     ):
-        registry.promote(card.version)
+        registry.promote(card.version, profile)
+        card.status = "champion"
         _print(
-            f"Modelo {card.version} promovido a campeón (puerta {'aprobada' if gate['passed'] else 'NO aprobada: solo práctica'})."
+            f"Modelo {card.version} promovido a campeón de '{profile}' (puerta {'aprobada' if gate['passed'] else 'NO aprobada: solo práctica'})."
         )
     else:
         _print(f"Modelo {card.version} guardado como challenger (el campeón actual se mantiene).")
+    _publish_research(settings, paths["json"], card)
     return 0
+
+
+def _publish_research(settings: Settings, report_json: Path, card) -> None:
+    """Guarda el reporte y la ficha del modelo en la base del panel (si está configurada)."""
+    try:
+        from cryptobot.runtime.demo import _latest_report
+        from cryptobot.runtime.factory import make_repo
+
+        repo = make_repo(settings)
+        row = _latest_report(settings, report_json)
+        if row:
+            repo.save_backtest(row)
+        repo.save_model(
+            {
+                "version": card.version,
+                "created_at": card.created_at,
+                "status": card.status,
+                "uses_meta": card.uses_meta,
+                "cost_profile": card.cost_profile,
+                "gate": card.gate,
+                "oos_metrics": card.oos_metrics,
+                "feature_importance": card.feature_importance,
+                "params": card.params,
+                "n_events": card.n_events,
+                "train_start": card.train_start,
+                "train_end": card.train_end,
+                "notes": card.notes,
+            }
+        )
+    except Exception as exc:  # el panel es opcional
+        log.warning("no se pudo publicar en el panel", extra={"data": {"err": str(exc)}})
 
 
 # --------------------------------------------------------------------- main

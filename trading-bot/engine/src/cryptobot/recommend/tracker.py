@@ -16,6 +16,14 @@ from cryptobot.recommend.models import Recommendation, RecStatus
 from cryptobot.timeutils import BAR, iso, to_utc
 from cryptobot.validation.metrics import calibration_table
 
+EXIT_TEXT = {
+    "time": "horizonte",
+    "stress": "estrés",
+    "trend_reversal": "giro de tendencia",
+    "euphoria": "euforia",
+    "kill": "emergencia",
+}
+
 
 def _evaluate(
     rec: Recommendation,

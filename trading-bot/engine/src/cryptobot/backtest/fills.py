@@ -35,8 +35,11 @@ def decision_fill(
     if last >= len(opens):
         return None
     window = opens[first : last + 1]
+    valid = window[np.isfinite(window)]
     if costs.exec_price_mode == "worst_open":
-        raw = float(np.nanmax(window) if side > 0 else np.nanmin(window))
+        if not len(valid):
+            return None  # hueco de datos: no se puede ejecutar
+        raw = float(valid.max() if side > 0 else valid.min())
     else:
         raw = float(opens[first])
     if not np.isfinite(raw):

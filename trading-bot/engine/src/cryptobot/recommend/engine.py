@@ -120,8 +120,9 @@ class RecommendationEngine:
                 rec = self._base(d, now)
                 rec.qty = h.qty * (d.reduce_frac if d.action == Action.REDUCE else 1.0)
                 new.append(rec)
-            # Cambio de régimen confirmado: aviso informativo ("según cómo esté el mercado")
-            if sym in regime_changes:
+            # Cambio de régimen confirmado que CAMBIA lo que hace el bot (entrar o salir de estrés).
+            # Alcista <-> lateral no se avisa (va en el resumen diario) para no llenar el celular.
+            if sym in regime_changes and Regime.STRESS.value in regime_changes[sym]:
                 regime_prev, regime_now = regime_changes[sym]
                 info = self._base(d, now)
                 info.status = RecStatus.INFO

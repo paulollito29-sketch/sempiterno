@@ -143,7 +143,7 @@ def load_config(repo: Repo, settings: Settings) -> LiveConfig:
 
 def load_bundle(registry: ModelRegistry | None, cost_profile: str) -> ModelBundle:
     preset = STRATEGY_PRESETS.get(cost_profile, StrategyParams())
-    champ = registry.load_champion() if registry is not None else None
+    champ = registry.load_champion(cost_profile) if registry is not None else None
     if champ is None:
         return ModelBundle(None, replace(preset, use_meta_model=False), None, None, False)
     card, art = champ
@@ -167,6 +167,7 @@ class BotApp:
         notifier: Notifier | None = None,
         registry: ModelRegistry | None = None,
         venue: str = "Lemon",
+        bundle: ModelBundle | None = None,
     ):
         self.settings = settings
         self.repo = repo
@@ -176,7 +177,7 @@ class BotApp:
         self.venue = venue
         self.cfg = load_config(repo, settings)
         self.costs = COST_PROFILES[self.cfg.cost_profile]
-        self.bundle = load_bundle(registry, self.cfg.cost_profile)
+        self.bundle = bundle or load_bundle(registry, self.cfg.cost_profile)
         self.broker = broker or self._make_broker()
 
     # ------------------------------------------------------------ armado

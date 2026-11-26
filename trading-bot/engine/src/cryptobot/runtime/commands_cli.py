@@ -53,7 +53,7 @@ def cmd_status(args: argparse.Namespace, settings: Settings) -> int:
     from cryptobot.runtime.factory import make_app
 
     app, _ = make_app(settings)
-    champ = ModelRegistry(settings.models_dir).load_champion()
+    champ = ModelRegistry(settings.models_dir).load_champion(app.cfg.cost_profile)
     if champ:
         card = champ[0]
         print(

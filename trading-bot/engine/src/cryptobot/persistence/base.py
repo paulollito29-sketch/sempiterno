@@ -62,11 +62,21 @@ class Repo:
         )
 
     def get_state(self) -> dict[str, Any]:
+        """Estado interno del bot (saldo, riesgo, regímenes...) en una sola columna JSON."""
         rows = self.store.select("bot_state", {"id": 1})
-        return rows[0] if rows else {}
+        return dict(rows[0].get("data") or {}) if rows else {}
 
     def save_state(self, state: dict[str, Any]) -> None:
-        self.store.upsert("bot_state", [{**state, "id": 1}])
+        self.store.upsert(
+            "bot_state", [{"id": 1, "data": state, "updated_at": iso(pd.Timestamp.now(tz="UTC"))}]
+        )
+
+    # ---------------- investigación (para el panel)
+    def save_backtest(self, row: dict[str, Any]) -> None:
+        self.store.upsert("backtests", [row])
+
+    def save_model(self, row: dict[str, Any]) -> None:
+        self.store.upsert("models", [row])
 
     # ---------------- ciclos
     def cycle_exists(self, cycle_id: str) -> bool:

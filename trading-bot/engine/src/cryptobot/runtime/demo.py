@@ -74,9 +74,12 @@ def build_demo(
     repo = Repo(store)
     demo_settings = replace_settings(settings)
     market = ReplayMarket(frames)
-    app = BotApp(demo_settings, repo, market, notifier=MemoryNotifier(), registry=None)
     end = min(f.index[-1] for f in frames.values()) + BAR
     start = end - pd.Timedelta(days=days)
+    bundle = _oos_bundle(frames, start)
+    app = BotApp(
+        demo_settings, repo, market, notifier=MemoryNotifier(), registry=None, bundle=bundle
+    )
     replay(app, start, end)
     tables = store.dump()
     tables["cycles"] = sorted(tables.get("cycles", []), key=lambda r: r["id"])[-150:]
@@ -88,10 +91,58 @@ def build_demo(
     report = _latest_report(settings, report_path)
     if report:
         tables["backtests"] = [report]
+    tables["models"] = _model_rows(settings)
     payload = {"generated_at": iso(pd.Timestamp.now(tz="UTC")), "note": note, "tables": tables}
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(payload, ensure_ascii=False, default=str))
     return out
+
+
+def _oos_bundle(frames: dict, start: pd.Timestamp):
+    """Meta-modelo entrenado SOLO con datos anteriores a la demo (fuera de muestra para la demo)."""
+    from cryptobot.backtest.research import ResearchConfig, train_final_model
+    from cryptobot.runtime.app import ModelBundle
+    from cryptobot.strategy.frame import SymbolFrame
+
+    params = replace(STRATEGY_PRESETS["lemon"], use_meta_model=True)
+    cut = {}
+    for s, f in frames.items():
+        k = int(f.index.searchsorted(start))
+        cut[s] = SymbolFrame(
+            s,
+            f.bars.iloc[:k],
+            f.features.iloc[:k],
+            f.regimes.iloc[:k],
+            f.overlays.iloc[:k],
+            f.event_side[:k],
+        )
+    model, payoff, _ = train_final_model(cut, params, ResearchConfig(cost_profile="lemon"))
+    if model is None:
+        return None
+    return ModelBundle("demo-fuera-de-muestra", params, payoff, model, approved=False)
+
+
+def _model_rows(settings: Settings) -> list[dict]:
+    from cryptobot.models.registry import ModelRegistry
+
+    if not settings.models_dir.exists():
+        return []
+    rows = []
+    for c in ModelRegistry(settings.models_dir).list_cards():
+        rows.append(
+            {
+                "version": c.version,
+                "created_at": c.created_at,
+                "status": c.status,
+                "uses_meta": c.uses_meta,
+                "cost_profile": c.cost_profile,
+                "gate": c.gate,
+                "oos_metrics": c.oos_metrics,
+                "feature_importance": c.feature_importance,
+                "notes": c.notes,
+            }
+        )
+    return rows
 
 
 def replace_settings(settings: Settings) -> Settings:

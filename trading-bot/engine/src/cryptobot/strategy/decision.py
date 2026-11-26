@@ -231,7 +231,8 @@ class DecisionEngine:
         d.size_frac = frac
         d.stop, d.target = stop, target
         d.horizon_end = mv.decision_time + pd.Timedelta(days=p.horizon_days)
-        d.prob, d.threshold = prob, threshold
+        d.prob = prob if self.uses_meta else None  # sin modelo no hay probabilidad por operación
+        d.threshold = threshold
         d.base_rate = self.payoff.base_rate if self.payoff else None
         d.expected_return = self.payoff.expected_return(prob) if self.payoff else None
         d.sizing = sizing.components

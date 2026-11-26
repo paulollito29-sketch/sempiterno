@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tokens (paleta validada de la guía de visualización: modo claro y oscuro seleccionados) */
+:root {
+  color-scheme: light;
+  --page: #f9f9f9;
+  --surface: #ffffff;
+  --raised: #ffffff;
+  --ink: #191919;
+  --muted: #666666;
+  --hairline: #e7e7e7;
+  --axis: #c2c2c2;
+  --border: rgba(11, 11, 11, 0.1);
+  --accent: #257de0;
+  --accent-ink: #ffffff;
+  --s1: #257de0;
+  --s2: #f47230;
+  --s3: #00b894;
+  --s4: #f2a600;
+  --s5: #ee7fac;
+  --s6: #008a17;
+  --good: #0aac23;
+  --warning: #fbb315;
+  --serious: #f18a59;
+  --critical: #dc3c3d;
+  --good-ink: #006c10;
+  --critical-ink: #b3261e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme='light'])) {
+    color-scheme: dark;
+    --page: #0b0b0b;
+    --surface: #191919;
+    --raised: #202020;
+    --ink: #efefef;
+    --muted: #9c9c9c;
+    --hairline: #303030;
+    --axis: #474747;
+    --border: rgba(255, 255, 255, 0.1);
+    --accent: #338ced;
+    --s1: #338ced;
+    --s2: #e76624;
+    --s3: #00a888;
+    --s4: #d28e05;
+    --s5: #e24d8b;
+    --s6: #0aac23;
+    --good-ink: #53c556;
+    --critical-ink: #ff8f8f;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --page: #0b0b0b;
+  --surface: #191919;
+  --raised: #202020;
+  --ink: #efefef;
+  --muted: #9c9c9c;
+  --hairline: #303030;
+  --axis: #474747;
+  --border: rgba(255, 255, 255, 0.1);
+  --accent: #338ced;
+  --s1: #338ced;
+  --s2: #e76624;
+  --s3: #00a888;
+  --s4: #d28e05;
+  --s5: #e24d8b;
+  --s6: #0aac23;
+  --good-ink: #53c556;
+  --critical-ink: #ff8f8f;
+}
+
+html,
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
