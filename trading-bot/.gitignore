@@ -1,0 +1,20 @@
+# Entornos y dependencias
+/engine/.venv/
+/dashboard/node_modules/
+/dashboard/dist/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+
+# Datos de mercado, modelos y reportes locales (se regeneran). Rutas ancladas: no confundir
+# con los paquetes src/cryptobot/data y src/cryptobot/models.
+/engine/data/
+/engine/models/
+/engine/reports/
+
+# Secretos
+.env
+.env.*
+!.env.example

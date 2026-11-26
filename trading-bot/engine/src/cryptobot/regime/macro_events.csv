@@ -1,0 +1,7 @@
+# Eventos macro de alto impacto (hora UTC del anuncio). El bot reduce exposición y avisa
+# 12 h antes y hasta 6 h después. Mantén esta lista actualizada.
+# FOMC: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm (anuncio 14:00 hora de Washington)
+# CPI de EE. UU.: https://www.bls.gov/schedule/news_release/cpi.htm (08:30 hora de Washington)
+# VERIFICA cada fecha en la fuente oficial antes de confiar en ella.
+datetime_utc,event
+2026-12-09T19:00:00Z,FOMC (decisión de tasas) - verificar
