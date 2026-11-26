@@ -7,6 +7,7 @@ desde el primer día para poder usarlos en el futuro.
 from __future__ import annotations
 
 from collections.abc import Callable
+
 import numpy as np
 import pandas as pd
 
@@ -103,9 +104,32 @@ class Collector:
         try:
             df = self.client.funding_history(symbol, start_ms=start_ms)
         except Exception as exc:  # símbolo sin perpetuo, bloqueo regional, etc.
-            log.warning("no se pudo bajar funding", extra={"data": {"symbol": symbol, "err": str(exc)}})
+            log.warning(
+                "no se pudo bajar funding", extra={"data": {"symbol": symbol, "err": str(exc)}}
+            )
             return 0
         return self.store.write_series("funding", df, symbol)
+
+    def backfill_funding_vision(
+        self, symbol: str, start: pd.Timestamp, end: pd.Timestamp | None = None
+    ) -> int:
+        """Funding histórico desde los zips mensuales de data.binance.vision (sin API de futuros)."""
+        end = end or pd.Timestamp.now(tz="UTC")
+        existing = self.store.read_series("funding", symbol)
+        if existing is not None and not existing.empty:
+            start = max(start, existing.index[-1].normalize().replace(day=1))
+        total = 0
+        for y, m in _month_range(start, end):
+            try:
+                df = self.client.vision_monthly_funding(symbol, y, m)
+            except Exception as exc:
+                log.warning(
+                    "funding mensual falló", extra={"data": {"symbol": symbol, "err": str(exc)}}
+                )
+                continue
+            if df is not None and not df.empty:
+                total = self.store.write_series("funding", df, symbol)
+        return total
 
     def sync_fng(self) -> int:
         if self.fng_client is None:
@@ -131,7 +155,9 @@ class Collector:
             n += self.store.write_series("open_interest", df, sym) > 0
         return n
 
-    def snapshot_book(self, symbols: list[str], now: pd.Timestamp | None = None, levels: int = 20) -> int:
+    def snapshot_book(
+        self, symbols: list[str], now: pd.Timestamp | None = None, levels: int = 20
+    ) -> int:
         """Guarda desequilibrio y spread del libro (no hay historial gratis)."""
         now = (now or pd.Timestamp.now(tz="UTC")).floor("min")
         n = 0
@@ -162,7 +188,8 @@ class Collector:
             try:
                 result[sym] = self.sync_symbol(sym, now)
             except Exception as exc:
-                log.error("fallo al sincronizar velas", extra={"data": {"symbol": sym, "err": str(exc)}})
+                log.error(
+                    "fallo al sincronizar velas", extra={"data": {"symbol": sym, "err": str(exc)}}
+                )
                 result[sym] = -1
         return result
-

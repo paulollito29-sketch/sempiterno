@@ -53,7 +53,11 @@ def parse_kline_rows(rows: list[list]) -> pd.DataFrame:
     arr = pd.DataFrame(rows, columns=KLINE_FIELDS[: len(rows[0])])
     ts = pd.to_datetime(_to_ms(arr["open_time"].to_numpy()), unit="ms", utc=True)
     df = pd.DataFrame(
-        {c: pd.to_numeric(arr[c], errors="coerce") for c in KLINE_FIELDS[1:11] if c != "close_time"},
+        {
+            c: pd.to_numeric(arr[c], errors="coerce")
+            for c in KLINE_FIELDS[1:11]
+            if c != "close_time"
+        },
     )
     df.index = ts
     return normalize_bars(df)
@@ -92,7 +96,9 @@ class BinancePublic:
         self.max_retries = max_retries
 
     # ---------- HTTP con reintentos ----------
-    def _get(self, url: str, params: dict | None = None, allow_404: bool = False) -> httpx.Response | None:
+    def _get(
+        self, url: str, params: dict | None = None, allow_404: bool = False
+    ) -> httpx.Response | None:
         delay = 1.0
         for attempt in range(self.max_retries + 1):
             try:
@@ -100,7 +106,9 @@ class BinancePublic:
             except httpx.HTTPError as exc:
                 if attempt == self.max_retries:
                     raise
-                log.warning("error de red, reintentando", extra={"data": {"url": url, "err": str(exc)}})
+                log.warning(
+                    "error de red, reintentando", extra={"data": {"url": url, "err": str(exc)}}
+                )
                 time.sleep(delay)
                 delay *= 2
                 continue
@@ -110,7 +118,10 @@ class BinancePublic:
                 if attempt == self.max_retries:
                     resp.raise_for_status()
                 wait = float(resp.headers.get("Retry-After", delay))
-                log.warning("límite de tasa o error del servidor", extra={"data": {"status": resp.status_code}})
+                log.warning(
+                    "límite de tasa o error del servidor",
+                    extra={"data": {"status": resp.status_code}},
+                )
                 time.sleep(min(wait, 60.0))
                 delay *= 2
                 continue
@@ -165,11 +176,15 @@ class BinancePublic:
         return {d["symbol"]: float(d["price"]) for d in data if d["symbol"] in wanted}
 
     def depth(self, symbol: str, limit: int = 20) -> dict:
-        resp = self._get(f"{self.data_url}/api/v3/depth", {"symbol": symbol.upper(), "limit": limit})
+        resp = self._get(
+            f"{self.data_url}/api/v3/depth", {"symbol": symbol.upper(), "limit": limit}
+        )
         return resp.json() if resp is not None else {}
 
     # ---------- futuros (funding / open interest) ----------
-    def funding_history(self, symbol: str, start_ms: int | None = None, end_ms: int | None = None) -> pd.DataFrame:
+    def funding_history(
+        self, symbol: str, start_ms: int | None = None, end_ms: int | None = None
+    ) -> pd.DataFrame:
         rows: list[dict] = []
         cur = start_ms
         while True:
@@ -187,7 +202,9 @@ class BinancePublic:
                 break
             cur = int(batch[-1]["fundingTime"]) + 1
         if not rows:
-            return pd.DataFrame(columns=["funding_rate"], index=pd.DatetimeIndex([], tz="UTC", name="ts"))
+            return pd.DataFrame(
+                columns=["funding_rate"], index=pd.DatetimeIndex([], tz="UTC", name="ts")
+            )
         df = pd.DataFrame(rows)
         out = pd.DataFrame(
             {"funding_rate": pd.to_numeric(df["fundingRate"], errors="coerce").to_numpy()},
@@ -197,13 +214,17 @@ class BinancePublic:
         return out[~out.index.duplicated(keep="last")].sort_index()
 
     def open_interest(self, symbol: str) -> float | None:
-        resp = self._get(f"{self.futures_url}/fapi/v1/openInterest", {"symbol": symbol.upper()}, allow_404=True)
+        resp = self._get(
+            f"{self.futures_url}/fapi/v1/openInterest", {"symbol": symbol.upper()}, allow_404=True
+        )
         if resp is None:
             return None
         return float(resp.json()["openInterest"])
 
     # ---------- archivos masivos (data.binance.vision) ----------
-    def vision_monthly_klines(self, symbol: str, interval: str, year: int, month: int) -> pd.DataFrame | None:
+    def vision_monthly_klines(
+        self, symbol: str, interval: str, year: int, month: int
+    ) -> pd.DataFrame | None:
         sym = symbol.upper()
         name = f"{sym}-{interval}-{year:04d}-{month:02d}.zip"
         url = f"{self.vision_url}/data/spot/monthly/klines/{sym}/{interval}/{name}"
@@ -233,6 +254,8 @@ class BinancePublic:
         time_col = next(c for c in df.columns if "time" in c.lower())
         rate_col = next(c for c in df.columns if "rate" in c.lower())
         idx = pd.to_datetime(_to_ms(df[time_col].to_numpy()), unit="ms", utc=True)
-        out = pd.DataFrame({"funding_rate": pd.to_numeric(df[rate_col], errors="coerce").to_numpy()}, index=idx)
+        out = pd.DataFrame(
+            {"funding_rate": pd.to_numeric(df[rate_col], errors="coerce").to_numpy()}, index=idx
+        )
         out.index.name = "ts"
         return out

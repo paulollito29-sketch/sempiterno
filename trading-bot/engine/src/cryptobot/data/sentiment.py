@@ -20,7 +20,9 @@ def parse_fng(payload: dict) -> pd.DataFrame:
 
 
 class FearGreedClient:
-    def __init__(self, url: str = "https://api.alternative.me/fng/", client: httpx.Client | None = None):
+    def __init__(
+        self, url: str = "https://api.alternative.me/fng/", client: httpx.Client | None = None
+    ):
         self.url = url
         self.client = client or httpx.Client(timeout=30.0, follow_redirects=True)
 

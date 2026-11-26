@@ -235,7 +235,7 @@ def run_symbol_backtest(
         set_state(entry.bar, cash, qty)
         risk.register_entry(mv.decision_time)
         stop, target = barrier_levels(entry.raw_price, frame._sigma[e], params)
-        vertical = entry.bar + H
+        vertical = max(e + H, entry.bar)  # horizonte desde la decisión (igual que en vivo)
         pos = PositionView(
             symbol=frame.symbol,
             qty=q,

@@ -90,7 +90,9 @@ def generate_market(
 
     if jumps:
         jump_mask = rng.random(n) < 1.0 / (BARS_5M_PER_DAY * 60)
-        jump_size = np.where(rng.random(n) < 0.6, rng.uniform(-0.10, -0.04, n), rng.uniform(0.03, 0.07, n))
+        jump_size = np.where(
+            rng.random(n) < 0.6, rng.uniform(-0.10, -0.04, n), rng.uniform(0.03, 0.07, n)
+        )
         r = r + jump_mask * jump_size
 
     # 4) Camino de precios y OHLC con 5 sub-pasos por vela
@@ -104,7 +106,13 @@ def generate_market(
 
     # 5) Volumen y flujo comprador-agresor (solo correlación contemporánea, sin poder predictivo)
     vol_season = 1.0 + 0.4 * np.sin(2 * np.pi * (hours - 9.0) / 24.0)
-    volume = 50.0 * np.sqrt(h) * vol_season * rng.lognormal(0.0, 0.35, n) * (1 + 3 * np.abs(shocks) * 0.1)
+    volume = (
+        50.0
+        * np.sqrt(h)
+        * vol_season
+        * rng.lognormal(0.0, 0.35, n)
+        * (1 + 3 * np.abs(shocks) * 0.1)
+    )
     z = np.clip(r / np.maximum(sigma, 1e-12), -4, 4)
     taker_ratio = np.clip(0.5 + 0.08 * z + 0.03 * rng.standard_normal(n), 0.05, 0.95)
     taker_buy_base = volume * taker_ratio
@@ -145,7 +153,11 @@ def generate_market(
 
 
 def generate_universe(
-    symbols: list[str], start: str = "2021-01-01", days: int = 730, seed: int = 7, random_walk: bool = False
+    symbols: list[str],
+    start: str = "2021-01-01",
+    days: int = 730,
+    seed: int = 7,
+    random_walk: bool = False,
 ) -> dict[str, SyntheticMarket]:
     """Varias criptos sintéticas (independientes) con distintas semillas y precios."""
     prices = [30_000.0, 2_000.0, 40.0, 300.0, 0.6, 0.5, 0.08, 20.0, 10.0, 6.0]

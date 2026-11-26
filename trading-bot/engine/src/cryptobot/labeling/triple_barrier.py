@@ -4,7 +4,7 @@ Para cada evento (compra candidata al cierre de la barra i):
   entrada  = ejecución realista (demora manual en Lemon, peor precio de la ventana)
   objetivo = entrada * exp(+tp_mult * σ_h)      σ_h = vol diaria * sqrt(horizonte en días)
   stop     = entrada * exp(-sl_mult * σ_h)
-  tiempo   = horizonte máximo
+  tiempo   = horizonte máximo, contado desde la barra de decisión
 La etiqueta es 1 si el retorno NETO de costos fue positivo.
 """
 
@@ -43,7 +43,9 @@ def label_events(
         if entry is None:
             continue
         stop, target = barrier_levels(entry.raw_price, s, params)
-        vertical = entry.bar + H
+        vertical = max(
+            int(i) + H, entry.bar
+        )  # horizonte contado desde la decisión (igual que en vivo)
         if vertical >= n:
             continue  # no resuelto: no se usa para entrenar
         touch = first_barrier_touch(highs, lows, entry.bar, vertical, stop, target)

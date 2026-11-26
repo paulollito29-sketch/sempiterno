@@ -21,7 +21,11 @@ class ParquetStore:
         return self.root / "candles" / symbol.upper() / f"{timeframe}.parquet"
 
     def _series_path(self, name: str, symbol: str | None = None) -> Path:
-        return self.root / name / f"{symbol.upper()}.parquet" if symbol else self.root / f"{name}.parquet"
+        return (
+            self.root / name / f"{symbol.upper()}.parquet"
+            if symbol
+            else self.root / f"{name}.parquet"
+        )
 
     # ---------- utilidades ----------
     @staticmethod
@@ -47,10 +51,7 @@ class ParquetStore:
 
     @staticmethod
     def _upsert(old: pd.DataFrame | None, new: pd.DataFrame) -> pd.DataFrame:
-        if old is None or old.empty:
-            merged = new
-        else:
-            merged = pd.concat([old, new])
+        merged = new if old is None or old.empty else pd.concat([old, new])
         merged = merged[~merged.index.duplicated(keep="last")].sort_index()
         return merged
 

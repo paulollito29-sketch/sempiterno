@@ -45,7 +45,9 @@ class ModelRegistry:
         d.mkdir(parents=True, exist_ok=True)
         for name, obj in artifacts.items():
             joblib.dump(obj, d / f"{name}.joblib")
-        (d / "card.json").write_text(json.dumps(asdict(card), indent=2, ensure_ascii=False, default=str))
+        (d / "card.json").write_text(
+            json.dumps(asdict(card), indent=2, ensure_ascii=False, default=str)
+        )
         return d
 
     def load(self, version: str) -> tuple[ModelCard, dict[str, Any]]:

@@ -57,7 +57,9 @@ def closed_bars(bars: pd.DataFrame, now: pd.Timestamp, minutes: int = BAR_MINUTE
     return bars[bars.index <= last_closed_bar_open(now, minutes)]
 
 
-def fill_small_gaps(bars: pd.DataFrame, minutes: int = BAR_MINUTES, max_gap_bars: int = 6) -> pd.DataFrame:
+def fill_small_gaps(
+    bars: pd.DataFrame, minutes: int = BAR_MINUTES, max_gap_bars: int = 6
+) -> pd.DataFrame:
     """Reindexa a una grilla completa y rellena huecos cortos con barras planas (volumen 0).
 
     Huecos mayores a `max_gap_bars` quedan como NaN: las features que los cubran serán NaN

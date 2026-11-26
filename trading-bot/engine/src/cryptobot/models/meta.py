@@ -78,7 +78,9 @@ class MetaModel:
     payoff: PayoffStats | None = None
     n_train: int = 0
 
-    def fit(self, X: pd.DataFrame, y: np.ndarray, net_ret: np.ndarray, times: np.ndarray) -> MetaModel:
+    def fit(
+        self, X: pd.DataFrame, y: np.ndarray, net_ret: np.ndarray, times: np.ndarray
+    ) -> MetaModel:
         from lightgbm import LGBMClassifier
         from sklearn.isotonic import IsotonicRegression
         from sklearn.linear_model import LogisticRegression
